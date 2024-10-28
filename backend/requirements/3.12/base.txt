@@ -25,7 +25,7 @@ django==4.2.16
     #   drf-spectacular
 django-admin-list-filter-dropdown==1.0.3
     # via -r backend/requirements/base.in
-django-authtools @ git+https://github.com/adRn-s/django-authtools@8b7e20d59e9f8d016f90a75266c73b2b1961aad6
+django-authtools @ git+https://github.com/adRn-s/django-authtools@a3284c976719bd26f085fdac9951009acda804dc
     # via -r backend/requirements/base.in
 django-extensions==3.2.3
     # via -r backend/requirements/base.in
