@@ -90,7 +90,7 @@ django-admin-list-filter-dropdown==1.0.3
     #   -r backend/requirements/base.in
 django-appconf==1.0.6
     # via django-cryptography-django5
-django-authtools @ git+https://github.com/adRn-s/django-authtools@8b7e20d59e9f8d016f90a75266c73b2b1961aad6
+django-authtools @ git+https://github.com/adRn-s/django-authtools@a3284c976719bd26f085fdac9951009acda804dc
     # via
     #   -c backend/requirements/3.13/base.txt
     #   -r backend/requirements/base.in
