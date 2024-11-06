@@ -552,7 +552,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Size (bp)",
         dataIndex: "mean_fragment_size",
-        tooltip: "Mean Fragment Size",
+        tooltip: "Enter the Mean Fragment Size (in bp)",
         editor: {
           xtype: "numberfield",
           minValue: 0
@@ -563,7 +563,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measuring Unit",
         dataIndex: "measuring_unit",
-        tooltip: "Measuring Unit",
+        tooltip: "Choose the Measuring Unit",
         width: 120,
         editor: {
           id: "measuringUnitEditor",
@@ -575,7 +575,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
           store: {
             fields: ["id", "name"],
             data: [
-              { id: "ng/µl", name: "ng/µl (Concentration)" },
+              { id: "concentration", name: "ng/µl (Concentration)" },
               { id: "-", name: "Unknown" }
             ]
           },
@@ -589,7 +589,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measured Value",
         dataIndex: "measured_value",
-        tooltip: "Measured Value",
+        tooltip: "Enter the Measured Value",
         width: 120,
         editor: {
           id: "measuredValueEditor",
@@ -602,7 +602,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index Type",
         dataIndex: "index_type",
-        tooltip: "Index Type",
+        tooltip: "Choose the Index Type",
         width: 100,
         editor: {
           xtype: "combobox",
@@ -620,7 +620,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "# of Index Reads",
         dataIndex: "index_reads",
-        tooltip: "Number of Index Reads",
+        tooltip: "Choose the Number of Index Reads",
         width: 130,
         editor: {
           xtype: "combobox",
@@ -656,8 +656,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index I7",
         dataIndex: "index_i7",
-        tooltip: "Index I7",
-        width: 140,
+        tooltip: "Choose Index I7",
+        width: 100,
         editor: {
           xtype: "combobox",
           id: "indexI7Editor",
@@ -682,8 +682,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index I5",
         dataIndex: "index_i5",
-        tooltip: "Index I5",
-        width: 140,
+        tooltip: "Choose Index I5",
+        width: 100,
         editor: {
           xtype: "combobox",
           id: "indexI5Editor",
@@ -708,13 +708,13 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Comment Library",
         dataIndex: "comments",
-        tooltip: "Comments",
-        width: 200,
+        tooltip: "Description of the Library Generation and the Expected Quality <br><br> - ChIP-Seq library, includes adapter dimers <br> - ChIP-Seq library contains fragments > 1kbp <br> - Amplicon, bp is the product of interest",
+        width: 180,
         editor: {
           xtype: "textfield",
           allowBlank: true
         }
-      }
+      }      
     ]);
 
     // Sorting the columns
@@ -722,12 +722,12 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       "numberer",
       "name",
       "barcode",
-      "library_protocol",
       "comments",
       "measuring_unit",
       "measured_value",
       "mean_fragment_size",
       "volume",
+      "library_protocol",
       "library_type",
       "read_length",
       "sequencing_depth",
@@ -752,7 +752,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measuring Unit",
         dataIndex: "measuring_unit",
-        tooltip: "Measuring Unit",
+        tooltip: "Choose the Measuring Unit",
         width: 120,
         editor: {
           id: "measuringUnitEditor",
@@ -764,8 +764,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
           store: {
             fields: ["id", "name"],
             data: [
-              { id: "ng/µl", name: "ng/µl (Concentration)" },
-              { id: "M", name: "M (Cells)" },
+              { id: "concentration", name: "ng/µl (Concentration)" },
+              { id: "m", name: "M (Cells)" },
               { id: "-", name: "Unknown" }
             ]
           },
@@ -779,7 +779,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measured Value",
         dataIndex: "measured_value",
-        tooltip: "Measured Value",
+        tooltip: "Enter the Measured Value",
         width: 120,
         editor: {
           id: "measuredValueEditor",
@@ -792,8 +792,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Input Type",
         dataIndex: "nucleic_acid_type",
-        tooltip: "Input Type",
-        width: 200,
+        tooltip: "Choose the Input Type",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "nucleicAcidTypeEditor",
@@ -810,7 +810,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "GMO",
         dataIndex: "gmo",
-        tooltip: "Genetically Modified Organism",
+        tooltip: "Choose if it's a Genetically Modified Organism",
         width: 90,
         editor: {
           xtype: "combobox",
@@ -831,7 +831,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Biosafety Level",
         dataIndex: "biosafety_level",
-        tooltip: "Biosafety Level",
+        tooltip: "Choose the Biosafety Level",
         width: 120,
         editor: {
           xtype: "combobox",
@@ -852,8 +852,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Comment Input",
         dataIndex: "comments",
-        tooltip: "Comments",
-        width: 200,
+        tooltip: "Description of the Input Generation and the Expected Quality <br><br> - pull-down assay, target: H3K9me3 <br> - Column-purified RNA, high quality, DNase treated <br> - FFPE extracted total RNA, fragmentation expected",
+        width: 220,
         editor: {
           xtype: "textfield",
           allowBlank: true
@@ -870,9 +870,9 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       "measuring_unit",
       "measured_value",
       "volume",
+      "nucleic_acid_type",
       "library_protocol",
       "library_type",
-      "nucleic_acid_type",
       "read_length",
       "sequencing_depth",
       "organism",
@@ -905,7 +905,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Name",
         dataIndex: "name",
-        tooltip: "Name",
+        tooltip: "Enter a Unique Name",
         minWidth: 200,
         flex: 1,
         editor: {
@@ -918,8 +918,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Protocol",
         dataIndex: "library_protocol",
-        tooltip: "Library Preparation Protocol",
-        width: 200,
+        tooltip: "Choose the Library Preparation Protocol",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "libraryProtocolEditor",
@@ -950,8 +950,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Analysis Type",
         dataIndex: "library_type",
-        tooltip: "Analysis Type",
-        width: 200,
+        tooltip: "Choose the Analysis Type",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "libraryTypeEditor",
@@ -967,7 +967,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Volume (µl)",
         dataIndex: "volume",
-        tooltip: "Volume",
+        tooltip: "Enter the Measured Volume",
         width: 90,
         editor: {
           xtype: "numberfield",
@@ -979,7 +979,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Read Length",
         dataIndex: "read_length",
-        tooltip: "Read Length",
+        tooltip: "Choose the Read Length",
         width: 100,
         editor: {
           xtype: "combobox",
@@ -995,7 +995,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Depth (M)",
         dataIndex: "sequencing_depth",
-        tooltip: "Sequencing Depth",
+        tooltip: "Enter the Sequencing Depth (in Millions of Paired-End Fragments)",
         width: 90,
         editor: {
           xtype: "numberfield",
@@ -1007,7 +1007,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Organism",
         dataIndex: "organism",
-        tooltip: "Organism",
+        tooltip: "Choose the Organism",
         width: 120,
         editor: {
           xtype: "combobox",
