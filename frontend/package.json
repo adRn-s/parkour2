@@ -19,6 +19,7 @@
     "@fortawesome/vue-fontawesome": "3.0.8",
     "ag-grid-community": "32.2.2",
     "ag-grid-vue3": "32.2.2",
+    "tabulator-tables": "6.3.0",
     "axios": "1.7.7",
     "bootstrap": "5.3.3",
     "js-cookie": "3.0.5",
