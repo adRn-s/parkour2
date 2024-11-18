@@ -27,11 +27,11 @@ attrs==24.2.0
     #   -c backend/requirements/3.12/dev.txt
     #   jsonschema
     #   referencing
-boto3==1.35.47
+boto3==1.35.63
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
-botocore==1.35.47
+botocore==1.35.63
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   boto3
@@ -56,11 +56,11 @@ colorama==0.4.6 ; sys_platform == 'win32' or platform_system == 'Windows'
     #   ipython
     #   pytest
     #   tqdm
-contourpy==1.3.0
+contourpy==1.3.1
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   matplotlib
-coverage==7.6.4
+coverage==7.6.7
     # via pytest-cov
 cryptography==43.0.3
     # via
@@ -123,7 +123,7 @@ django-authtools @ git+https://github.com/adRn-s/django-authtools@a3284c976719bd
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
-django-cors-headers==4.5.0
+django-cors-headers==4.6.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
@@ -139,11 +139,11 @@ django-extensions==3.2.3
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
-django-import-export==4.2.0
+django-import-export==4.2.1
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
-django-linear-migrations==2.15.0
+django-linear-migrations==2.16.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
@@ -176,7 +176,7 @@ drf-spectacular==0.27.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
-et-xmlfile==1.1.0
+et-xmlfile==2.0.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   openpyxl
@@ -186,7 +186,7 @@ executing==2.1.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   stack-data
-fonttools==4.54.1
+fonttools==4.55.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   fpdf2
@@ -205,7 +205,7 @@ h11==0.14.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   httpcore
-httpcore==1.0.6
+httpcore==1.0.7
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   httpx
@@ -229,15 +229,15 @@ ipdb==0.13.13
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
-ipython==8.28.0
+ipython==8.29.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   ipdb
-jedi==0.19.1
+jedi==0.19.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   ipython
-jiter==0.6.1
+jiter==0.7.1
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   openai
@@ -282,14 +282,14 @@ mdurl==0.1.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   markdown-it-py
-numpy==2.1.2
+numpy==2.1.3
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
     #   contourpy
     #   matplotlib
     #   pandas
-openai==1.52.2
+openai==1.54.4
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
@@ -297,7 +297,7 @@ openpyxl==3.1.5
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/base.in
-packaging==24.1
+packaging==24.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   gunicorn
@@ -373,7 +373,7 @@ pytest==8.3.3
     #   pytest-xdist
 pytest-base-url==2.1.0
     # via pytest-playwright
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via -r backend/requirements/testing.in
 pytest-django==4.9.0
     # via -r backend/requirements/testing.in
@@ -412,7 +412,7 @@ referencing==0.35.1
     #   -c backend/requirements/3.12/dev.txt
     #   jsonschema
     #   jsonschema-specifications
-regex==2024.9.11
+regex==2024.11.6
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   tiktoken
@@ -422,11 +422,11 @@ requests==2.32.3
     #   django-sql-explorer
     #   pytest-base-url
     #   tiktoken
-rich==13.9.3
+rich==13.9.4
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
-rpds-py==0.20.0
+rpds-py==0.21.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   jsonschema
@@ -446,11 +446,11 @@ sniffio==1.3.1
     #   anyio
     #   httpx
     #   openai
-sql-metadata==2.13.0
+sql-metadata==2.15.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
-sqlparse==0.5.1
+sqlparse==0.5.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   django
@@ -479,7 +479,7 @@ toml==0.10.2
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   django-migration-linter
-tqdm==4.66.5
+tqdm==4.67.0
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   openai
@@ -515,7 +515,7 @@ wcwidth==0.2.13
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   prompt-toolkit
-werkzeug==3.0.4
+werkzeug==3.1.3
     # via
     #   -c backend/requirements/3.12/dev.txt
     #   -r backend/requirements/dev.in
