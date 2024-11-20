@@ -400,7 +400,7 @@ Ext.define("MainHub.view.requests.RequestWindowController", {
     }
     var librariesInRequestGrid = wnd.down("#libraries-in-request-grid");
     if (librariesInRequestGrid) {
-      librariesInRequestGrid.getView().refresh(); 
+      librariesInRequestGrid.getView().refresh();
     }
   },
 
