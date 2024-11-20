@@ -7,14 +7,13 @@ Ext.define("MainHub.view.incominglibrariesvue.IncomingLibrariesVue", {
   initComponent: function () {
     this.callParent(arguments);
 
-    var homeUrl = window.location.origin;
+    // var homeUrl = window.location.origin;
 
     this.add({
       xtype: "component",
       html:
         '<iframe src="' +
-        homeUrl +
-        '/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>',
+        'http://localhost:5174/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>',
     });
   },
 });

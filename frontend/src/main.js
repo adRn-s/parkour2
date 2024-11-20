@@ -11,7 +11,8 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
   faChalkboardUser,
-  faMagnifyingGlass
+  faMagnifyingGlass,
+  faFilter, faColumns
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faCalendarPlus,
@@ -24,7 +25,9 @@ library.add(
   faChalkboardUser,
   faMagnifyingGlass,
   faCalendarPlus,
-  faCalendarDays
+  faCalendarDays,
+  faFilter,
+  faColumns
 );
 
 app.use(router);
