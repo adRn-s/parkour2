@@ -13,6 +13,10 @@ Ext.define("MainHub.view.requests.RequestWindow", {
   modal: true,
   resizable: true,
 
+  listeners: {
+    beforeclose: "onRequestWindowBeforeClose"
+  },
+
   items: [
     {
       xtype: "container",

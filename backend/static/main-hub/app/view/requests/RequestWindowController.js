@@ -393,6 +393,17 @@ Ext.define("MainHub.view.requests.RequestWindowController", {
     });
   },
 
+  onRequestWindowBeforeClose: function (wnd) {
+    var librariesInRequestStore = Ext.getStore("librariesInRequestStore");
+    if (librariesInRequestStore) {
+      librariesInRequestStore.removeAll();
+    }
+    var librariesInRequestGrid = wnd.down("#libraries-in-request-grid");
+    if (librariesInRequestGrid) {
+      librariesInRequestGrid.getView().refresh(); 
+    }
+  },
+
   initializeTooltips: function () {
     $.each($(".request-field-tooltip"), function (idx, item) {
       Ext.create("Ext.tip.ToolTip", {
