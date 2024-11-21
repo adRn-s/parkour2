@@ -12,7 +12,6 @@ export default {
     props: {
         rowData: {
             type: Array,
-            required: true,
         },
         columnDefs: {
             type: Array,
@@ -26,49 +25,19 @@ export default {
     setup(props) {
         const table = ref(null);
 
-        // Watch for changes in rowData and columnDefs
-        watch([() => props.rowData, () => props.columnDefs], ([newData, newColumns]) => {
-            nextTick(() => {
-                if (table.value) {
-                    // Update columns visibility based on the 'visible' property
-                    newColumns.forEach(column => {
-                        if (column.visible) {
-                            table.value.showColumn(column.field);
-                        } else {
-                            table.value.hideColumn(column.field);
-                        }
-                    });
-                    // Update table data
-                    table.value.setData(newData);
-                }
-            });
-        });
-
-        // Initialize the Tabulator table on mounted
         onMounted(() => {
+
             const options = {
                 data: props.rowData,
-                columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        cellClick: function (e, cell) {
-                            cell.getRow().toggleSelect();
-                        },
-                    },
-                    ...props.columnDefs,
-                ],
+                columns: props.columnDefs,
                 layout: "fitColumns",
-                fitColumns: true,
                 columnDefaults: {
                     headerSort: true,
                     headerFilter: false,
-                    headerHozAlign: "center",
                     editor: false,
+                    headerHozAlign: "center",
                     resizable: "header",
-                    width: 100,
+                    width: 70,
                 },
                 tooltips: true,
                 resizableColumns: true,
@@ -91,39 +60,18 @@ export default {
                 clipboardCopyRowRange: "range",
                 clipboardPasteParser: "range",
                 clipboardPasteAction: "range",
-                groupContextMenu: [
-                    {
-                        label: "Select All",
-                        action: function (e, group) {
-                            group.hide();
-                        }
-                    },
-                    {
-                        label: "Deselect All",
-                        action: function (e, group) {
-                            group.hide();
-                        }
-                    },
-                ],
-                rowContextMenu: [
-                    {
-                        label: "Apply to All",
-                        action: function (e, row) {
-                            row.delete();
-                        }
-                    },
-                    {
-                        label: "Quality Check: Pass",
-                        action: function (e, row) {
-                            row.delete();
-                        }
-                    },
-                ],
                 ...props.tableOptions,
             };
 
-            // Initialize Tabulator instance
             table.value = new Tabulator(table.value, options);
+
+            table.value.on("cellEdited", (cell) => {
+                let updatedData = { field: cell.getField(), value: cell.getValue() };
+                let rowData = cell.getData();
+                if (props.tableOptions?.onCellValueChanged) {
+                    props.tableOptions.onCellValueChanged(rowData, updatedData);
+                }
+            });
         });
 
         return {
@@ -140,11 +88,17 @@ export default {
 }
 
 .tabulator-table {
-    padding-bottom: 5px !important;
+    padding-bottom: 5px;
+    height: 470px;
+    overflow-y: visible;
 }
 
 .tabulator-col {
-    font-size: 13px !important;
+    font-size: 13px;
+}
+
+.tabulator-col-group {
+    border-left: 1px solid lightgrey;
 }
 
 .tabulator-row.tabulator-group {
@@ -154,19 +108,30 @@ export default {
     justify-content: flex-start;
 }
 
+.tabulator-col.tabulator-frozen.tabulator-frozen-right {
+    border-right: 1px solid lightgrey;
+}
+
+.tabulator-frozen.tabulator-frozen-right {
+    border-right: 1px solid lightgrey;
+}
+
+.tabulator-cell.disable-range-selection {
+    pointer-events: none;
+}
+
+.tabulator-cell.tabulator-editing {
+    background-color: lightgoldenrodyellow !important;
+}
+
 .tabulator-col.user-entry-column {}
 
 .tabulator-col.facility-entry-column {}
 
 .tabulator-cell.details-column {
-    background-color: #ffffff !important;
     font-weight: bold !important;
+    background-color: white !important;
     color: darkslategrey !important;
-    pointer-events: none;
-}
-
-.tabulator-block-select{
-    border: none !important;
 }
 
 .tabulator-cell.user-entry-column {
@@ -177,13 +142,5 @@ export default {
 .tabulator-cell.facility-entry-column {
     background-color: #c4ecc2;
     color: #388E3C;
-}
-
-.tabulator-col-group {
-    border-left: 1px solid lightgrey !important;
-}
-
-.tabulator-frozen.tabulator-frozen-right {
-    border-right: 1px solid lightgrey !important;
 }
 </style>
