@@ -1,5 +1,5 @@
 <template>
-    <div ref="table"></div>
+  <div ref="table"></div>
 </template>
 
 <script>
@@ -8,139 +8,165 @@ import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
 import { ref, onMounted, watch, nextTick } from "vue";
 
 export default {
-    name: "TabulatorTable",
-    props: {
-        rowData: {
-            type: Array,
-        },
-        columnDefs: {
-            type: Array,
-            required: true,
-        },
-        tableOptions: {
-            type: Object,
-            default: () => ({}),
-        },
+  name: "TabulatorTable",
+  props: {
+    rowData: {
+      type: Array
     },
-    setup(props) {
-        const table = ref(null);
-
-        onMounted(() => {
-
-            const options = {
-                data: props.rowData,
-                columns: props.columnDefs,
-                layout: "fitColumns",
-                columnDefaults: {
-                    headerSort: true,
-                    headerFilter: false,
-                    editor: false,
-                    headerHozAlign: "center",
-                    resizable: "header",
-                    width: 70,
-                },
-                tooltips: true,
-                resizableColumns: true,
-                movableColumns: true,
-                groupToggleElement: "header",
-                groupStartOpen: false,
-                selectable: true,
-                selectableRange: 1,
-                selectableRangeColumns: false,
-                selectableRangeRows: false,
-                selectableRangeClearCells: false,
-                editTriggerEvent: "dblclick",
-                clipboard: true,
-                clipboardCopyStyled: true,
-                clipboardCopyConfig: {
-                    formatCells: false,
-                    rowHeaders: false,
-                    columnHeaders: false,
-                },
-                clipboardCopyRowRange: "range",
-                clipboardPasteParser: "range",
-                clipboardPasteAction: "range",
-                ...props.tableOptions,
-            };
-
-            table.value = new Tabulator(table.value, options);
-
-            table.value.on("cellEdited", (cell) => {
-                let updatedData = { field: cell.getField(), value: cell.getValue() };
-                let rowData = cell.getData();
-                if (props.tableOptions?.onCellValueChanged) {
-                    props.tableOptions.onCellValueChanged(rowData, updatedData);
-                }
-            });
-        });
-
-        return {
-            table,
-        };
+    columnDefs: {
+      type: Array,
+      required: true
     },
+    tableOptions: {
+      type: Object,
+      default: () => ({})
+    }
+  },
+  setup(props, { expose }) {
+    const table = ref(null);
+
+    onMounted(() => {
+      const options = {
+        data: props.rowData,
+        columns: props.columnDefs,
+        layout: "fitColumns",
+        columnDefaults: {
+          headerSort: true,
+          headerFilter: false,
+          editor: false,
+          headerHozAlign: "center",
+          resizable: "header",
+          width: 70
+        },
+        tooltips: true,
+        resizableColumns: true,
+        movableColumns: true,
+        groupToggleElement: "header",
+        groupStartOpen: false,
+        selectable: true,
+        selectableRange: 1,
+        selectableRangeColumns: false,
+        selectableRangeRows: false,
+        selectableRangeClearCells: false,
+        editTriggerEvent: "dblclick",
+        clipboard: true,
+        clipboardCopyStyled: true,
+        clipboardCopyConfig: {
+          formatCells: false,
+          rowHeaders: false,
+          columnHeaders: false
+        },
+        clipboardCopyRowRange: "range",
+        clipboardPasteParser: "range",
+        clipboardPasteAction: "range",
+        ...props.tableOptions
+      };
+
+      table.value = new Tabulator(table.value, options);
+
+      table.value.on("cellEdited", (cell) => {
+        let updatedData = { field: cell.getField(), value: cell.getValue() };
+        let rowData = cell.getData();
+        if (props.tableOptions?.onCellValueChanged) {
+          props.tableOptions.onCellValueChanged(rowData, updatedData);
+        }
+      });
+    });
+
+    expose({
+      getTable() {
+        return table;
+      }
+    });
+
+    return {
+      table
+    };
+  }
 };
 </script>
 
-
 <style>
 .tabulator {
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .tabulator-table {
-    padding-bottom: 5px;
-    height: 470px;
-    overflow-y: visible;
+  padding-bottom: 5px;
+  height: 470px;
+  background-color: #7788992d !important;
+  overflow-y: visible;
 }
 
 .tabulator-col {
-    font-size: 13px;
+  font-size: 13px;
 }
 
 .tabulator-col-group {
-    border-left: 1px solid lightgrey;
+  border-right: 1px solid grey !important;
 }
 
-.tabulator-row.tabulator-group {
-    margin-top: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+.tabulator-col.tabulator-frozen {
+  border-right: 1px solid grey !important;
 }
 
-.tabulator-col.tabulator-frozen.tabulator-frozen-right {
-    border-right: 1px solid lightgrey;
+.tabulator-cell {
+  border-bottom: 1px solid grey !important;
 }
 
-.tabulator-frozen.tabulator-frozen-right {
-    border-right: 1px solid lightgrey;
+.tabulator-cell.tabulator-frozen {
+  border-right: 1px solid grey !important;
 }
 
 .tabulator-cell.disable-range-selection {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 .tabulator-cell.tabulator-editing {
-    background-color: lightgoldenrodyellow !important;
+  background-color: lightgoldenrodyellow !important;
 }
 
-.tabulator-col.user-entry-column {}
+.tabulator-cell {
+  height: 35px !important;
+  line-height: 10px; /* Match the height */
+  text-align: center; /* Optional: centers text horizontally */
+}
 
-.tabulator-col.facility-entry-column {}
+.tabulator-row {
+  min-height: 0;
+  height: 35px !important;
+}
+
+.tabulator-row[role="row"] {
+  border: none !important;
+}
+
+.tabulator-row.tabulator-group {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: rgb(250, 241, 210);
+}
+
+.tabulator-col.user-entry-column {
+}
+
+.tabulator-col.facility-entry-column {
+}
 
 .tabulator-cell.details-column {
-    font-weight: bold !important;
-    background-color: white !important;
-    color: darkslategrey !important;
+  font-weight: bold !important;
+  color: darkslategrey !important;
 }
 
 .tabulator-cell.user-entry-column {
-    background-color: #ffebee;
-    color: #C62828;
+  background-color: #ffebee;
+  color: #c62828;
 }
 
 .tabulator-cell.facility-entry-column {
-    background-color: #c4ecc2;
-    color: #388E3C;
+  background-color: #c4ecc2;
+  color: #388e3c;
 }
 </style>
