@@ -13,9 +13,9 @@
     "start-prod": "npm install && vite build && npx serve -s dist -l 5173"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "6.6.0",
-    "@fortawesome/free-regular-svg-icons": "6.6.0",
-    "@fortawesome/free-solid-svg-icons": "6.6.0",
+    "@fortawesome/fontawesome-svg-core": "6.7.1",
+    "@fortawesome/free-regular-svg-icons": "6.7.1",
+    "@fortawesome/free-solid-svg-icons": "6.7.1",
     "@fortawesome/vue-fontawesome": "3.0.8",
     "ag-grid-community": "32.3.3",
     "ag-grid-vue3": "32.3.3",
