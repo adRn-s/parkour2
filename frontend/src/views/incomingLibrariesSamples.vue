@@ -578,11 +578,11 @@ export default {
     },
     handleGroupButtonClick(event, groupValue, action) {
       console.log(`Action: ${action} for group: ${groupValue}`);
-      event.stopPropagation(); // Prevent the group toggle behavior
+      event.stopPropagation();
       if (this.tabulatorInstance == null) {
         const table = this.$refs.tabulatorTableRef.getTable();
         this.tabulatorInstance = table;
-      } // Access Tabulator instance
+      }
       if (!this.tabulatorInstance) {
         console.error("Tabulator instance is not available");
         return;
@@ -639,29 +639,19 @@ export default {
       this.tabulatorInstance.redraw();
     },
     setFilters() {
-      // Convert the filter options into the necessary filtering logic
       let filteredData = this.librariesSamplesList.filter((row) => {
-        // If the filter option for 'showLibraries' is false and the row type is "L", exclude it
         if (!this.filters.showLibraries && row.type === "L") return false;
-
-        // If the filter option for 'showSamples' is false and the row type is "S", exclude it
         if (!this.filters.showSamples && row.type === "S") return false;
-
-        // Otherwise, return the row as it passes the filter conditions
         return true;
       });
 
-      // Update the filtered data in the component state
       this.filteredLibrariesSamples = filteredData;
 
-      // Ensure tabulatorInstance is available before setting data
       if (this.tabulatorInstance == null) {
-        // Get the Tabulator instance (if not already set)
         const table = this.$refs.tabulatorTableRef.getTable();
         this.tabulatorInstance = table;
       }
 
-      // Update Tabulator with the filtered data
       this.tabulatorInstance.setData(filteredData);
 
       console.log(
