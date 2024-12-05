@@ -182,6 +182,34 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
             item.set("index_type", record.get("index_type"));
           }
 
+          else if (dataIndex === "measuring_unit") {
+            // Update Measuring Unit
+            item.set("measuring_unit", record.get("measuring_unit"));
+
+            // Update Measured Value based on Measuring Unit
+            if (record.get("measuring_unit") === "-") {
+                item.set("measured_value", -1);
+            } else {
+                item.set("measured_value", null);
+            }
+        } 
+
+        else if (dataIndex === "measured_value") {
+            // Update Measuring Unit and Measured Value
+            item.set("measuring_unit", record.get("measuring_unit"));
+            item.set("measured_value", record.get("measured_value"));
+        }
+
+        else if (dataIndex === "gmo") {
+          // Update GMO field
+          item.set("gmo", record.get("gmo"));
+      }
+
+      else if (dataIndex === "biosafety_level") {
+          // Update Biosafety Level
+          item.set("biosafety_level", record.get("biosafety_level"));
+      }
+
           // If the # of Index Reads was selected, update Index Type too
           else if (dataIndex === "index_reads") {
             item.set({
@@ -563,7 +591,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measuring Unit",
         dataIndex: "measuring_unit",
-        tooltip: "Choose the Measuring Unit",
+        tooltip: "Choose the Measuring Unit <br><br> - Use 'Unknown' if no values are available",
         width: 120,
         editor: {
           id: "measuringUnitEditor",
@@ -722,13 +750,13 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       "numberer",
       "name",
       "barcode",
+      "library_protocol",
       "comments",
+      "library_type",
       "measuring_unit",
       "measured_value",
       "mean_fragment_size",
       "volume",
-      "library_protocol",
-      "library_type",
       "read_length",
       "sequencing_depth",
       "index_type",
@@ -752,7 +780,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Measuring Unit",
         dataIndex: "measuring_unit",
-        tooltip: "Choose the Measuring Unit",
+        tooltip: "Choose the Measuring Unit <br><br> - Use 'Unknown' if no values are available",
         width: 120,
         editor: {
           id: "measuringUnitEditor",
@@ -810,7 +838,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "GMO",
         dataIndex: "gmo",
-        tooltip: "Choose if it's a Genetically Modified Organism",
+        tooltip: "Choose if you are submitting Genetically Modified Organisms, often applies or living cells",
         width: 90,
         editor: {
           xtype: "combobox",
@@ -866,11 +894,11 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       "numberer",
       "name",
       "barcode",
+      "nucleic_acid_type",
       "comments",
       "measuring_unit",
       "measured_value",
       "volume",
-      "nucleic_acid_type",
       "library_protocol",
       "library_type",
       "read_length",
