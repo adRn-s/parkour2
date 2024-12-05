@@ -12,7 +12,9 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
   faChalkboardUser,
   faMagnifyingGlass,
-  faFilter, faColumns
+  faFilter,
+  faColumns,
+  faFileExcel
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faCalendarPlus,
@@ -27,7 +29,8 @@ library.add(
   faCalendarPlus,
   faCalendarDays,
   faFilter,
-  faColumns
+  faColumns,
+  faFileExcel
 );
 
 app.use(router);

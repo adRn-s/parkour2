@@ -19,7 +19,6 @@
     "@fortawesome/vue-fontawesome": "3.0.8",
     "ag-grid-community": "32.2.2",
     "ag-grid-vue3": "32.2.2",
-    "tabulator-tables": "6.3.0",
     "axios": "1.7.7",
     "bootstrap": "5.3.3",
     "js-cookie": "3.0.5",
@@ -27,9 +26,11 @@
     "pinia": "2.2.4",
     "sass": "1.80.3",
     "serve": "14.2.4",
+    "tabulator-tables": "6.3.0",
     "vue": "3.5.12",
     "vue-router": "4.4.5",
-    "vue-toastification": "2.0.0-rc.5"
+    "vue-toastification": "2.0.0-rc.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "5.1.4",

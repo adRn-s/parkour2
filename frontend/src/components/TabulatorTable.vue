@@ -4,8 +4,9 @@
 
 <script>
 import { TabulatorFull as Tabulator } from "tabulator-tables";
+import { ref, onMounted } from "vue";
+import * as XLSX from "xlsx";
 import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
-import { ref, onMounted, watch, nextTick } from "vue";
 
 export default {
   name: "TabulatorTable",
@@ -59,6 +60,11 @@ export default {
         clipboardCopyRowRange: "range",
         clipboardPasteParser: "range",
         clipboardPasteAction: "range",
+        dependencies: {
+          XLSX: XLSX
+        },
+        downloadConfig: {
+        },
         ...props.tableOptions
       };
 
@@ -100,22 +106,16 @@ export default {
 
 .tabulator-col {
   font-size: 13px;
-}
-
-.tabulator-col-group {
-  border-right: 1px solid grey !important;
-}
-
-.tabulator-col.tabulator-frozen {
-  border-right: 1px solid grey !important;
+  border-right: 1px solid lightgrey !important;
 }
 
 .tabulator-cell {
   border-bottom: 1px solid grey !important;
+  border-right: 1px solid grey !important;
 }
 
-.tabulator-cell.tabulator-frozen {
-  border-right: 1px solid grey !important;
+.tabulator-col-group {
+  border-right: 1px solid lightgrey !important;
 }
 
 .tabulator-cell.disable-range-selection {
@@ -128,8 +128,8 @@ export default {
 
 .tabulator-cell {
   height: 35px !important;
-  line-height: 10px; /* Match the height */
-  text-align: center; /* Optional: centers text horizontally */
+  line-height: 10px;
+  text-align: center;
 }
 
 .tabulator-row {
@@ -147,12 +147,6 @@ export default {
   align-items: center;
   justify-content: flex-start;
   background-color: rgb(250, 241, 210);
-}
-
-.tabulator-col.user-entry-column {
-}
-
-.tabulator-col.facility-entry-column {
 }
 
 .tabulator-cell.details-column {
