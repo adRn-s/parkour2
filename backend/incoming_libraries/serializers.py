@@ -60,6 +60,7 @@ class BaseSerializer(ModelSerializer):
             "library_protocol_name",
             "measuring_unit_facility",
             "measured_value_facility",
+
         )
         extra_kwargs = {
             "name": {"required": False},
@@ -102,12 +103,16 @@ class SampleSerializer(BaseSerializer):
             "nucleic_acid_type_name",
             "rna_quality",
             "rna_quality_facility",
+            "gmo",
+            "biosafety_level",
         )
         extra_kwargs = {
             **BaseSerializer.Meta.extra_kwargs,
             **{
                 "nucleic_acid_type": {"required": False},
                 "rna_quality": {"required": False},
+                "gmo": {"required": False},
+                "biosafety_level": {"required": False},
             },
         }
 

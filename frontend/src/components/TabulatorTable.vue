@@ -1,5 +1,5 @@
 <template>
-  <div ref="table"></div>
+  <div ref="tabulatorTableRef"></div>
 </template>
 
 <script>
@@ -23,7 +23,7 @@ export default {
     }
   },
   setup(props, { expose }) {
-    const table = ref(null);
+    const tabulatorTableRef = ref(null);
 
     onMounted(() => {
       const options = {
@@ -62,9 +62,9 @@ export default {
         ...props.tableOptions
       };
 
-      table.value = new Tabulator(table.value, options);
+      tabulatorTableRef.value = new Tabulator(tabulatorTableRef.value, options);
 
-      table.value.on("cellEdited", (cell) => {
+      tabulatorTableRef.value.on("cellEdited", (cell) => {
         let updatedData = { field: cell.getField(), value: cell.getValue() };
         let rowData = cell.getData();
         if (props.tableOptions?.onCellValueChanged) {
@@ -75,12 +75,12 @@ export default {
 
     expose({
       getTable() {
-        return table;
+        return tabulatorTableRef.value;
       }
     });
 
     return {
-      table
+      tabulatorTableRef
     };
   }
 };
