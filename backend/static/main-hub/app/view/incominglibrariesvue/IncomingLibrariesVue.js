@@ -13,7 +13,7 @@ Ext.define("MainHub.view.incominglibrariesvue.IncomingLibrariesVue", {
       xtype: "component",
       html:
         '<iframe src="' +
-        'http://localhost:9980/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>',
+        'https://parkour-dev.ie-freiburg.mpg.de/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>'
     });
-  },
+  }
 });
