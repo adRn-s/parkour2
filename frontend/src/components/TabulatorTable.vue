@@ -4,7 +4,6 @@
 
 <script>
 import { TabulatorFull as Tabulator } from "tabulator-tables";
-import { ref, onMounted } from "vue";
 import * as XLSX from "xlsx";
 import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
 
@@ -23,71 +22,99 @@ export default {
       default: () => ({})
     }
   },
-  setup(props, { expose }) {
-    const tabulatorTableRef = ref(null);
-
-    onMounted(() => {
-      const options = {
-        data: props.rowData,
-        columns: props.columnDefs,
-        layout: "fitColumns",
-        columnDefaults: {
-          headerSort: true,
-          headerFilter: false,
-          editor: false,
-          headerHozAlign: "center",
-          resizable: "header",
-          width: 70
-        },
-        tooltips: true,
-        resizableColumns: true,
-        movableColumns: true,
-        groupToggleElement: "header",
-        groupStartOpen: false,
-        selectable: true,
-        selectableRange: 1,
-        selectableRangeColumns: false,
-        selectableRangeRows: false,
-        selectableRangeClearCells: false,
-        editTriggerEvent: "dblclick",
-        clipboard: true,
-        clipboardCopyStyled: true,
-        clipboardCopyConfig: {
-          formatCells: false,
-          rowHeaders: false,
-          columnHeaders: false
-        },
-        clipboardCopyRowRange: "range",
-        clipboardPasteParser: "range",
-        clipboardPasteAction: "range",
-        dependencies: {
-          XLSX: XLSX
-        },
-        downloadConfig: {
-        },
-        ...props.tableOptions
-      };
-
-      tabulatorTableRef.value = new Tabulator(tabulatorTableRef.value, options);
-
-      tabulatorTableRef.value.on("cellEdited", (cell) => {
-        let updatedData = { field: cell.getField(), value: cell.getValue() };
-        let rowData = cell.getData();
-        if (props.tableOptions?.onCellValueChanged) {
-          props.tableOptions.onCellValueChanged(rowData, updatedData);
-        }
-      });
-    });
-
-    expose({
-      getTable() {
-        return tabulatorTableRef.value;
-      }
-    });
-
+  data() {
     return {
-      tabulatorTableRef
+      tabulatorInstance: null
     };
+  },
+  watch: {
+    rowData(newData, oldData) {
+      if (newData !== oldData) {
+        this.updateTableData();
+      }
+    },
+    columnDefs(newColumns, oldColumns) {
+      if (newColumns !== oldColumns) {
+        this.updateTableColumns();
+      }
+    }
+  },
+  mounted() {
+    this.initializeTable();
+  },
+  methods: {
+    initializeTable() {
+      if (this.rowData && this.columnDefs) {
+        const options = {
+          data: this.rowData,
+          columns: this.columnDefs,
+          layout: "fitColumns",
+          columnDefaults: {
+            headerSort: true,
+            headerFilter: false,
+            editor: false,
+            headerHozAlign: "center",
+            resizable: "header",
+            width: 70
+          },
+          tooltips: true,
+          resizableColumns: true,
+          movableColumns: true,
+          groupToggleElement: "header",
+          groupStartOpen: false,
+          selectable: true,
+          selectableRange: 1,
+          selectableRangeColumns: false,
+          selectableRangeRows: false,
+          selectableRangeClearCells: false,
+          editTriggerEvent: "dblclick",
+          clipboard: true,
+          clipboardCopyStyled: true,
+          clipboardCopyConfig: {
+            formatCells: false,
+            rowHeaders: false,
+            columnHeaders: false
+          },
+          clipboardCopyRowRange: "range",
+          clipboardPasteParser: "range",
+          clipboardPasteAction: "range",
+          dependencies: {
+            XLSX: XLSX
+          },
+          downloadConfig: {},
+          ...this.tableOptions
+        };
+
+        this.tabulatorInstance = new Tabulator(
+          this.$refs.tabulatorTableRef,
+          options
+        );
+
+        this.tabulatorInstance.on("cellEdited", (cell) => {
+          let updatedData = { field: cell.getField(), value: cell.getValue() };
+          let rowData = cell.getData();
+          if (this.tableOptions?.onCellValueChanged) {
+            this.tableOptions.onCellValueChanged(rowData, updatedData);
+          }
+        });
+      }
+    },
+
+    updateTableData() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.replaceData(this.rowData);
+      }
+    },
+
+    updateTableColumns() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.setColumns(this.columnDefs);
+      }
+    },
+
+    getTable() {
+      return this.tabulatorInstance;
+    }
   }
 };
 </script>

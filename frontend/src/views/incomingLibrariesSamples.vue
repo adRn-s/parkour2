@@ -14,11 +14,18 @@
           />
         </div>
         <div class="button-popup-wrapper">
-          <button @click="toggleAdvancedFilters">
+          <button
+            id="toggleAdvancedFiltersButton"
+            @click="toggleAdvancedFilters"
+          >
             <font-awesome-icon icon="fa-solid fa-filter" style="color: white" />
             Advanced Filters
           </button>
-          <div v-if="showAdvancedFilters" class="button-popup-container">
+          <div
+            id="advancedFiltersPopup"
+            v-if="showAdvancedFilters"
+            class="button-popup-container"
+          >
             <label>
               <input type="checkbox" v-model="filters.showLibraries" />
               Show Libraries
@@ -30,15 +37,15 @@
           </div>
         </div>
         <div class="button-popup-wrapper">
-          <button @click="toggleSelectColumns">
+          <button id="toggleSelectColumnsButton" @click="toggleSelectColumns">
             <font-awesome-icon
               icon="fa-solid fa-columns"
               style="color: white"
             />
             Select Columns
           </button>
-
           <div
+            id="selectColumnsPopup"
             v-if="showSelectColumns"
             class="button-popup-container"
             style="left: -48px"
@@ -70,7 +77,7 @@
 
     <!-- Main content section with table -->
     <div class="table-container">
-      <div style="margin: 10px; border: 1px solid lightgray">
+      <div style="margin: 10px">
         <TabulatorTable
           v-if="!loading"
           ref="tabulatorTableRef"
@@ -172,7 +179,14 @@ export default {
     this.getLibrariesSamples();
     this.setColumns();
 
+    document.addEventListener("click", this.handleOutsideClick);
     window.handleGroupButtonClick = this.handleGroupButtonClick.bind(this);
+  },
+  updated() {
+    this.tabulatorInstance = this.$refs.tabulatorTableRef.getTable();
+  },
+  beforeDestroy() {
+    document.removeEventListener("click", this.handleOutsideClick);
   },
   watch: {
     searchQuery() {
@@ -235,7 +249,7 @@ export default {
           size_distribution_facility: element.size_distribution_facility || "-",
           rna_quality: element.rna_quality || "-",
           gmo: element.gmo,
-          comments_facility: element.comments_facility
+          comments_facility: element.comments_facility || ""
         }));
         this.librariesSamplesList = fetchedRows;
         this.filteredLibrariesSamples = fetchedRows;
@@ -255,7 +269,6 @@ export default {
       } catch (error) {
         handleError(error);
       } finally {
-        this.loading = false;
       }
     },
     setColumns() {
@@ -398,8 +411,8 @@ export default {
               vertAlign: "bottom",
               cssClass: "user-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
                 return value % 1 === 0 ? value.toFixed(1) : value;
@@ -415,8 +428,8 @@ export default {
               vertAlign: "bottom",
               cssClass: "user-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
                 return value % 1 === 0 ? value.toFixed(1) : value;
@@ -468,11 +481,11 @@ export default {
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
-                return value % 1 === 0 ? value.toFixed(1) : value;
+                if (value) return value % 1 === 0 ? value.toFixed(1) : value;
               }
             },
             {
@@ -486,8 +499,8 @@ export default {
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
                 return value % 1 === 0 ? value.toFixed(1) : value;
@@ -504,8 +517,8 @@ export default {
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
                 return value % 1 === 0 ? value.toFixed(1) : value;
@@ -522,8 +535,8 @@ export default {
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
               formatter: function (cell) {
-                let value = cell.getValue();
-                if (value === null || value === undefined) {
+                let value = Number(cell.getValue());
+                if (!value) {
                   return "-";
                 }
                 return value % 1 === 0 ? value.toFixed(1) : value;
@@ -570,25 +583,53 @@ export default {
         }
       ];
     },
+    handleOutsideClick(event) {
+      const advancedFiltersPopup = this.$el.querySelector(
+        "#advancedFiltersPopup"
+      );
+      const advancedFiltersButton = this.$el.querySelector(
+        "#toggleAdvancedFiltersButton"
+      );
+      const selectColumnsPopup = this.$el.querySelector("#selectColumnsPopup");
+      const selectColumnsButton = this.$el.querySelector(
+        "#toggleSelectColumnsButton"
+      );
+
+      if (
+        this.showAdvancedFilters &&
+        advancedFiltersPopup &&
+        !advancedFiltersPopup.contains(event.target) &&
+        advancedFiltersButton !== event.target &&
+        !advancedFiltersButton.contains(event.target)
+      ) {
+        this.showAdvancedFilters = false;
+      }
+
+      if (
+        this.showSelectColumns &&
+        selectColumnsPopup &&
+        !selectColumnsPopup.contains(event.target) &&
+        selectColumnsButton !== event.target &&
+        !selectColumnsButton.contains(event.target)
+      ) {
+        this.showSelectColumns = false;
+      }
+    },
     toggleAdvancedFilters() {
       this.showAdvancedFilters = !this.showAdvancedFilters;
+      if (this.showAdvancedFilters) {
+        this.showSelectColumns = false;
+      }
     },
     toggleSelectColumns() {
       this.showSelectColumns = !this.showSelectColumns;
+      if (this.showSelectColumns) {
+        this.showAdvancedFilters = false;
+      }
     },
     handleGroupButtonClick(event, groupValue, action) {
       console.log(`Action: ${action} for group: ${groupValue}`);
       event.stopPropagation();
-      if (this.tabulatorInstance == null) {
-        const table = this.$refs.tabulatorTableRef.getTable();
-        this.tabulatorInstance = table;
-      }
-      if (!this.tabulatorInstance) {
-        console.error("Tabulator instance is not available");
-        return;
-      }
-
-      console.log("ss", this.tabulatorInstance);
 
       console.log("rrrr00", this.tabulatorInstance.getGroups());
 
@@ -646,26 +687,22 @@ export default {
       });
 
       this.filteredLibrariesSamples = filteredData;
-
-      if (this.tabulatorInstance == null) {
-        const table = this.$refs.tabulatorTableRef.getTable();
-        this.tabulatorInstance = table;
-      }
-
       this.tabulatorInstance.setData(filteredData);
-
-      console.log(
-        "Filtered data applied to Tabulator:",
-        this.tabulatorInstance
-      );
     },
     onSearch() {
       let lowercasedQuery = this.searchQuery.toLowerCase();
       let filteredData = [];
+
       if (lowercasedQuery.trim() === "") {
         filteredData = [...this.librariesSamplesList];
+        this.tabulatorInstance.setData(filteredData).then(() => {
+          this.tabulatorInstance.getGroups().forEach((group) => {
+            group.hide();
+          });
+        });
+        this.filteredLibrariesSamples = filteredData;
       } else {
-        filteredData = this.librariesSamplesList.filter((row) => {
+        filteredData = [...this.librariesSamplesList].filter((row) => {
           return (
             (row.name && row.name.toLowerCase().includes(lowercasedQuery)) ||
             (row.barcode &&
@@ -682,13 +719,12 @@ export default {
               row.comments.toLowerCase().includes(lowercasedQuery))
           );
         });
+        this.tabulatorInstance.setData(filteredData).then(() => {
+          this.tabulatorInstance.getGroups().forEach((group) => {
+            group.show();
+          });
+        });
         this.filteredLibrariesSamples = filteredData;
-        if (this.tabulatorInstance == null) {
-          const table = this.$refs.tabulatorTableRef.getTable();
-          this.tabulatorInstance = table;
-        }
-        this.tabulatorInstance.setData(filteredData);
-        console.log("in", this.tabulatorInstance);
       }
     },
     async onCellValueChanged(rowData, updatedData) {
@@ -714,10 +750,6 @@ export default {
       }
     },
     exportToExcel() {
-      if (this.tabulatorInstance == null) {
-        const table = this.$refs.tabulatorTableRef.getTable();
-        this.tabulatorInstance = table;
-      }
       const today = new Date();
       const day = String(today.getDate()).padStart(2, "0");
       const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -726,13 +758,13 @@ export default {
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
       this.tabulatorInstance.getGroups().forEach((group) => {
-        group.toggle();
+        group.show();
       });
       this.tabulatorInstance.download("xlsx", filename, {
         sheetName: "Incoming Libraries & Samples"
       });
       this.tabulatorInstance.getGroups().forEach((group) => {
-        group.toggle();
+        group.hide();
       });
     }
   }
@@ -747,7 +779,6 @@ export default {
 }
 
 .table-container {
-  width: 100%;
   overflow-x: auto;
 }
 
