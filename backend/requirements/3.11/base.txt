@@ -45,7 +45,7 @@ drf-spectacular==0.28.0
     # via -r backend/requirements/base.in
 et-xmlfile==2.0.0
     # via openpyxl
-fonttools==4.55.2
+fonttools==4.55.3
     # via fpdf2
 fpdf2==2.8.1
     # via -r backend/requirements/base.in
@@ -97,7 +97,7 @@ rpds-py==0.22.3
     #   referencing
 six==1.17.0
     # via python-dateutil
-sqlparse==0.5.2
+sqlparse==0.5.3
     # via django
 tablib==3.7.0
     # via django-import-export
