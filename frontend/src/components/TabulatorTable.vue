@@ -131,32 +131,41 @@ export default {
   overflow-y: visible;
 }
 
-.tabulator-col {
-  font-size: 13px;
-  border-right: 1px solid lightgrey !important;
-}
-
-.tabulator-cell {
-  border-bottom: 1px solid grey !important;
-  border-right: 1px solid grey !important;
-}
-
-.tabulator-col-group {
-  border-right: 1px solid lightgrey !important;
-}
-
-.tabulator-cell.disable-range-selection {
-  pointer-events: none;
-}
-
-.tabulator-cell.tabulator-editing {
-  background-color: lightgoldenrodyellow !important;
+.tabulator-header {
+  border: 1px solid grey !important;
 }
 
 .tabulator-cell {
   height: 35px !important;
   line-height: 10px;
   text-align: center;
+  border-bottom: 1px solid grey !important;
+  border-right: 1px solid grey !important;
+}
+
+.tabulator-cell.disable-range-selection {
+  pointer-events: none;
+}
+
+.tabulator-cell.tabulator-range-selected {
+  background-color: #c0e7fd !important;
+}
+
+.tabulator-cell.tabulator-editing {
+  background-color: lightgoldenrodyellow !important;
+}
+
+.tabulator-col {
+  font-size: 13px;
+  border-right: 1px solid grey !important;
+}
+
+.tabulator-col-group {
+  border-right: 1px solid grey !important;
+}
+
+.tabulator-col-group-cols {
+  border-top: 1px solid grey !important;
 }
 
 .tabulator-row {
@@ -168,12 +177,21 @@ export default {
   border: none !important;
 }
 
+.tabulator-row:not(.tabulator-group):nth-child(even),
+.tabulator-row:not(.tabulator-group):nth-child(odd) {
+  background-color: white !important;
+}
+
 .tabulator-row.tabulator-group {
   margin-top: 5px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background-color: rgb(250, 241, 210);
+  background-color: #faf1d2;
+}
+
+.tabulator-row.tabulator-group:hover {
+  background-color: #fff9e1;
 }
 
 .tabulator-cell.details-column {
@@ -189,5 +207,14 @@ export default {
 .tabulator-cell.facility-entry-column {
   background-color: #c4ecc2;
   color: #388e3c;
+}
+
+.tabulator .tabulator-placeholder {
+  text-align: center;
+  width: 600px !important;
+  height: 487px !important;
+  overflow-x: scroll !important;
+  background-color: #7788992d !important;
+  white-space: nowrap;
 }
 </style>
