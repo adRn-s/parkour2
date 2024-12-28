@@ -45,27 +45,28 @@
           <div id="selectColumnsPopup" v-if="showSelectColumns" class="button-popup-container"
             style="left: -50px; width: 250px; padding-right: 8px; padding-top: 10px; padding-bottom: 10px;">
             <ul style="padding-left: 0px; padding-right: 10px; max-height: 300px; overflow-y: auto;">
-              <li v-for="(column, index) in flattenedColumns" :key="index" style="list-style: none;">
-                <label
-                  :style="{ border: column.columns ? '2px solid #333333' : '2px solid #ddd', cursor: column.columns ? 'default' : 'pointer' }">
-                  <input v-if="!column.columns" type="checkbox" v-model="column.visible" />
-                  <span v-if="column.columns" style="
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    border: 2px solid black; 
-                    padding: 0; 
-                    height: 18px; 
-                    width: 18px; 
-                    border-radius: 3px;
-                    text-align: center;
-                    background-color: #45bbff;
-                    color: white;
-                  ">
-                    🔽
-                  </span>
-                  {{ column.title }}
-                </label>
+              <li v-for="(column, index) in columnsList" :key="index" style="list-style: none;">
+                <template v-if="column.field !== 'select'">
+                  <label
+                    :style="{ backgroundColor: column.columns ? '#faf1d2' : 'white', cursor: column.columns ? 'default' : 'pointer' }">
+                    <input v-if="!column.columns" type="checkbox" :checked="column.visible"
+                      @change="toggleColumnVisibility(column, true)" />
+                    <span v-if="column.columns"
+                      style="display: flex; align-items: center; justify-content: center; border: 2px solid black; padding: 0; height: 18px; width: 18px; border-radius: 3px; text-align: center; background-color: #45bbff; color: white;">
+                      🔽
+                    </span>
+                    {{ column.title }}
+                  </label>
+                  <ul v-if="column.columns" style="padding-left: 20px;">
+                    <li v-for="(subColumn, subIndex) in column.columns" :key="subIndex" style="list-style: none;">
+                      <label>
+                        <input type="checkbox" :checked="subColumn.visible"
+                          @change="toggleColumnVisibility(subColumn, false)" />
+                        {{ subColumn.title }}
+                      </label>
+                    </li>
+                  </ul>
+                </template>
               </li>
             </ul>
           </div>
@@ -81,7 +82,7 @@
     <div class="table-container">
       <div style="margin: 10px">
         <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="filteredLibrariesSamples"
-          :columnDefs="currentVisibleColumns" :tableOptions="{ ...tableOptions, onCellValueChanged }" />
+          :columnDefs="columnsList" :tableOptions="{ ...tableOptions, onCellValueChanged }" />
       </div>
     </div>
   </div>
@@ -213,12 +214,6 @@ export default {
 `;
         },
         initialSort: [{ column: "name", dir: "asc" }],
-        rowContextMenu: [
-          {
-            label: "Apply to All",
-            action: function () { }
-          }
-        ]
       },
       showAdvancedFilters: false,
       filters: {
@@ -248,9 +243,6 @@ export default {
     searchQuery() {
       this.onSearch();
     },
-    selectedFilter() {
-      this.getLibrariesSamples();
-    },
     "filters.showLibraries"(newValue, oldValue) {
       if (newValue !== oldValue) {
         this.setFilters();
@@ -261,22 +253,6 @@ export default {
         this.setFilters();
       }
     }
-  },
-  computed: {
-    currentVisibleColumns() {
-      return this.columnsList.filter((column) => column.visible);
-    },
-    flattenedColumns() {
-      const flatten = (columns) => {
-        return columns.flatMap((column) => {
-          if (column.columns) {
-            return [column, ...flatten(column.columns)];
-          }
-          return column;
-        });
-      };
-      return flatten(this.columnsList);
-    },
   },
   methods: {
     async getLibrariesSamples() {
@@ -357,6 +333,7 @@ export default {
           },
           hozAlign: "center",
           width: 50,
+          contextMenu: this.cellContextMenu(false, false, false),
           cellClick: function (e, cell) {
             const clickedRow = cell.getRow();
             const rowData = clickedRow.getData();
@@ -371,7 +348,8 @@ export default {
           headerFilter: true,
           visible: true,
           frozen: true,
-          cssClass: "details-column text-align-left"
+          cssClass: "details-column text-align-left",
+          contextMenu: this.cellContextMenu(true, false, false),
         },
         {
           title: "Barcode",
@@ -380,7 +358,8 @@ export default {
           headerFilter: true,
           visible: true,
           frozen: true,
-          cssClass: "details-column"
+          cssClass: "details-column",
+          contextMenu: this.cellContextMenu(true, false, false),
         },
         {
           title: "From Users",
@@ -396,7 +375,8 @@ export default {
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "user-entry-column"
+              cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
             },
             {
               title: "Protocol",
@@ -406,7 +386,8 @@ export default {
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "user-entry-column"
+              cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
             },
             {
               title: "Comment Library/Input",
@@ -416,7 +397,8 @@ export default {
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "user-entry-column"
+              cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
             },
             {
               title: "Input",
@@ -426,7 +408,8 @@ export default {
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "user-entry-column"
+              cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
             },
             {
               title: "Volume",
@@ -437,6 +420,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -454,6 +438,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
+              contextMenu: this.cellContextMenu(true, false, false),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -487,6 +472,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
+              contextMenu: this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 const value = cell.getValue();
                 const options = {
@@ -507,6 +493,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
+              contextMenu: this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -525,6 +512,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
+              contextMenu: this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -543,6 +531,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
+              contextMenu: this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -561,6 +550,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
+              contextMenu: this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -575,6 +565,7 @@ export default {
               minWidth: 60,
               width: "4%",
               editor: "list",
+              contextMenu: this.cellContextMenu(true, true, true),
               editorParams: {
                 values: [
                   { label: "Not Needed", value: "false" },
@@ -604,11 +595,46 @@ export default {
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "facility-entry-column no-right-border"
+              cssClass: "facility-entry-column no-right-border",
+              contextMenu: this.cellContextMenu(true, true, true),
             }
           ]
         }
       ];
+    },
+    cellContextMenu(allowCopy, allowPaste, allowApplyToAll) {
+      const operations = [];
+
+      if (allowCopy) {
+        operations.push({
+          label: "Copy",
+          action: (e, cell) => {
+            const value = cell.getValue();
+            navigator.clipboard.writeText(value);
+          }
+        });
+      }
+      if (allowPaste) {
+        operations.push({
+          label: "Paste",
+          action: (e, cell) => {
+            navigator.clipboard.readText().then((text) => {
+              cell.setValue(text);
+            });
+          }
+        });
+      }
+      if (allowApplyToAll) {
+        operations.push({
+          label: "Apply to All",
+          action: (e, cell) => {
+            const value = cell.getValue();
+            const rowData = cell.getRow().getData();
+            console.log(`Editing ${cell.getField()} for ${rowData.name}`, value, cell);
+          }
+        });
+      }
+      return operations.length ? operations : [];
     },
     handleOutsideClick(event) {
       const advancedFiltersPopup = this.$el.querySelector(
@@ -646,26 +672,28 @@ export default {
       const tabulatorElement = this.tabulatorInstance.getTabulatorElement();
       this.groupState = (this.groupState + 1) % 3;
 
-      console.log("ss", tabulatorElement)
       switch (this.groupState) {
         case 0:
-          this.columnsList[0].visible = true;
+          tabulatorElement.classList.remove('no-group-by');
+          this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
           this.tabulatorInstance.showAllGroups();
-          tabulatorElement.classList.remove('no-group-by');
+          this.tabulatorInstance.refreshTable();
           break;
 
         case 1:
-          this.columnsList[0].visible = true;
+          tabulatorElement.classList.remove('no-group-by');
+          this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
           this.tabulatorInstance.hideAllGroups();
-          tabulatorElement.classList.remove('no-group-by');
+          this.tabulatorInstance.refreshTable();
           break;
 
         case 2:
-          this.columnsList[0].visible = false;
-          this.tabulatorInstance.getTable().setGroupBy(false);
           tabulatorElement.classList.add('no-group-by');
+          this.tabulatorInstance.getTable().hideColumn("select");
+          this.tabulatorInstance.getTable().setGroupBy(false);
+          this.tabulatorInstance.refreshTable();
           break;
       }
     },
@@ -680,6 +708,49 @@ export default {
       if (this.showSelectColumns) {
         this.showAdvancedFilters = false;
       }
+    },
+    toggleColumnVisibility(column, isMainColumn) {
+      let updatedColumns;
+
+      if (isMainColumn) {
+        updatedColumns = this.columnsList.map((col) => ({
+          ...col,
+          visible: col === column ? !col.visible : col.visible,
+        }));
+      } else {
+        updatedColumns = this.columnsList.map((col) => {
+          if (col.columns) {
+            return {
+              ...col,
+              columns: col.columns.map((subCol) => ({
+                ...subCol,
+                visible: subCol === column ? !subCol.visible : subCol.visible,
+              })),
+            };
+          }
+          return col;
+        });
+      }
+
+      this.columnsList = updatedColumns;
+      this.tabulatorInstance.getTable().setColumns(updatedColumns);
+      this.redistributeColumnWidths();
+    },
+    redistributeColumnWidths() {
+      const totalWidth = 100;
+      const visibleColumns = this.columnsList.filter((col) => col.visible);
+
+      const newWidth = totalWidth / visibleColumns.length;
+
+      this.columnsList = this.columnsList.map((col) => {
+        if (col.visible) {
+          return { ...col, width: newWidth };
+        }
+        return col;
+      });
+
+      this.tabulatorInstance.getTable().setColumns(this.columnsList);
+      this.tabulatorInstance.refreshTable();
     },
     handleGroupButtonClick(event, groupValue, action) {
       console.log(`Action: ${action} for group: ${groupValue}`);
@@ -760,7 +831,9 @@ export default {
       });
 
       this.filteredLibrariesSamples = filteredData;
-      this.tabulatorInstance.getTable().setData(filteredData);
+      this.tabulatorInstance.getTable().setData(filteredData).then(() => {
+        this.tabulatorInstance.showAllGroups();
+      });
     },
     onSearch() {
       let lowercasedQuery = this.searchQuery.toLowerCase();

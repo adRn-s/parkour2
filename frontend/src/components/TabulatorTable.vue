@@ -55,11 +55,10 @@ export default {
             editor: false,
             headerHozAlign: "center",
             resizable: "header",
-            width: 70
+            headerContextMenu: [],
           },
           tooltips: true,
           resizableColumns: true,
-          movableColumns: true,
           groupToggleElement: "header",
           groupStartOpen: false,
           selectable: true,
@@ -82,6 +81,7 @@ export default {
             XLSX: XLSX
           },
           downloadConfig: {},
+          groupContextMenu: [],
           ...this.tableOptions
         };
 
@@ -101,6 +101,10 @@ export default {
             this.tableOptions.onCellValueChanged(rowData, updatedData);
           }
         });
+
+        this.tabulatorInstance.on("columnResized", () => {
+          this.refreshTable();
+        });
       }
     },
 
@@ -117,6 +121,7 @@ export default {
     updateTableColumns() {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.setColumns(this.columnDefs);
+        this.tabulatorInstance.redraw(true);
       }
     },
 
@@ -133,6 +138,12 @@ export default {
         this.tabulatorInstance.blockRedraw();
         this.tabulatorInstance.getGroups().forEach((group) => group.hide());
         this.tabulatorInstance.restoreRedraw();
+      }
+    },
+
+    refreshTable() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.redraw(true);
       }
     },
 
@@ -166,8 +177,7 @@ export default {
 .tabulator-placeholder {
   text-align: center;
   width: 600px !important;
-  height: 487px !important;
-  overflow-x: scroll !important;
+  height: 470px !important;
   background-color: #7788992d !important;
   white-space: nowrap;
 }
