@@ -14,11 +14,12 @@ import {
   faMagnifyingGlass,
   faFilter,
   faColumns,
-  faFileExcel
+  faFileExcel,
+  faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faCalendarPlus,
-  faCalendarDays
+  faCalendarDays,
 } from "@fortawesome/free-regular-svg-icons";
 
 const app = createApp(vueApp);
@@ -30,7 +31,8 @@ library.add(
   faCalendarDays,
   faFilter,
   faColumns,
-  faFileExcel
+  faFileExcel,
+  faLayerGroup
 );
 
 app.use(router);

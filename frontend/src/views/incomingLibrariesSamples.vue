@@ -16,6 +16,12 @@
           <font-awesome-icon icon="fa-solid fa-magnifying-glass" style="color: darkgrey" />
         </div>
         <div class="button-popup-wrapper">
+          <button @click="toggleGroups">
+            <font-awesome-icon icon="fa-solid fa-layer-group" style="color: white" />
+            Toggle Views
+          </button>
+        </div>
+        <div class="button-popup-wrapper">
           <button id="toggleAdvancedFiltersButton" @click="toggleAdvancedFilters">
             <font-awesome-icon icon="fa-solid fa-filter" style="color: white" />
             Advanced Filters
@@ -29,9 +35,6 @@
               <input type="checkbox" v-model="filters.showSamples" />
               Show Samples
             </label>
-            <button style="margin: auto; margin-bottom: 4px; display: block;" @click="applyAdvancedFiltersChanges">
-              Apply
-            </button>
           </div>
         </div>
         <div class="button-popup-wrapper">
@@ -40,7 +43,7 @@
             Select Columns
           </button>
           <div id="selectColumnsPopup" v-if="showSelectColumns" class="button-popup-container"
-            style="left: -50px; width: 250px; padding-right: 8px;">
+            style="left: -50px; width: 250px; padding-right: 8px; padding-top: 10px; padding-bottom: 10px;">
             <ul style="padding-left: 0px; padding-right: 10px; max-height: 300px; overflow-y: auto;">
               <li v-for="(column, index) in flattenedColumns" :key="index" style="list-style: none;">
                 <label
@@ -65,9 +68,6 @@
                 </label>
               </li>
             </ul>
-            <button style="margin: auto; margin-top: 8px; display: block;" @click="applySelectColumnsChange">
-              Apply
-            </button>
           </div>
         </div>
         <button @click="exportToExcel">
@@ -110,6 +110,7 @@ export default {
       librariesSamplesList: [],
       filteredLibrariesSamples: [],
       columnsList: [],
+      groupState: 0,
       tableOptions: {
         groupBy: "request_name",
         placeholder: "No Libraries and Samples to show.",
@@ -238,7 +239,7 @@ export default {
     window.handleGroupButtonClick = this.handleGroupButtonClick.bind(this);
   },
   updated() {
-    this.tabulatorInstance = this.$refs.tabulatorTableRef.getTable();
+    this.tabulatorInstance = this.$refs.tabulatorTableRef;
   },
   beforeDestroy() {
     document.removeEventListener("click", this.handleOutsideClick);
@@ -345,6 +346,7 @@ export default {
           visible: true,
           headerSort: false,
           frozen: true,
+          resizable: false,
           formatter: function (cell) {
             const row = cell.getRow();
             const rowData = row.getData();
@@ -365,18 +367,16 @@ export default {
         {
           title: "Name",
           field: "name",
-          minWidth: 150,
-          width: "20%",
+          minWidth: 220,
           headerFilter: true,
           visible: true,
           frozen: true,
-          cssClass: "details-column"
+          cssClass: "details-column text-align-left"
         },
         {
           title: "Barcode",
           field: "barcode",
-          minWidth: 120,
-          width: "12%",
+          minWidth: 100,
           headerFilter: true,
           visible: true,
           frozen: true,
@@ -391,8 +391,8 @@ export default {
             {
               title: "Input Type",
               field: "nucleic_acid_type_name",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 80,
+              width: "6%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -401,8 +401,8 @@ export default {
             {
               title: "Protocol",
               field: "library_protocol_name",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 80,
+              width: "6%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -411,8 +411,8 @@ export default {
             {
               title: "Comment Library/Input",
               field: "comments",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 100,
+              width: "9%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -421,8 +421,8 @@ export default {
             {
               title: "Input",
               field: "input",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -431,8 +431,8 @@ export default {
             {
               title: "Volume",
               field: "volume",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -448,8 +448,8 @@ export default {
             {
               title: "Size",
               field: "mean_fragment_size",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -473,8 +473,8 @@ export default {
             {
               title: "Measuring Unit",
               field: "measuring_unit_facility",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 80,
+              width: "6%",
               editor: "list",
               editorParams: {
                 values: [
@@ -500,8 +500,8 @@ export default {
             {
               title: "Measured Value",
               field: "measured_value_facility",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               editor: "number",
               headerVertical: true,
               visible: true,
@@ -518,8 +518,8 @@ export default {
             {
               title: "Volume",
               field: "sample_volume_facility",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               editor: "number",
               headerVertical: true,
               visible: true,
@@ -536,8 +536,8 @@ export default {
             {
               title: "Size",
               field: "size_distribution_facility",
-              minWidth: 120,
-              width: "7.95%",
+              minWidth: 60,
+              width: "4%",
               editor: "number",
               headerVertical: true,
               visible: true,
@@ -554,8 +554,8 @@ export default {
             {
               title: "RQN",
               field: "rna_quality",
-              minWidth: 80,
-              width: "5.30%",
+              minWidth: 60,
+              width: "4%",
               editor: "number",
               headerVertical: true,
               visible: true,
@@ -572,8 +572,8 @@ export default {
             {
               title: "GMO Documentation",
               field: "gmo",
-              minWidth: 80,
-              width: "5.30%",
+              minWidth: 60,
+              width: "4%",
               editor: "list",
               editorParams: {
                 values: [
@@ -598,13 +598,13 @@ export default {
             {
               title: "Comment",
               field: "comments_facility",
-              minWidth: 80,
-              width: "5.30%",
+              minWidth: 100,
+              width: "9%",
               editor: "input",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
-              cssClass: "facility-entry-column"
+              cssClass: "facility-entry-column no-right-border"
             }
           ]
         }
@@ -642,6 +642,33 @@ export default {
         this.showSelectColumns = false;
       }
     },
+    toggleGroups() {
+      const tabulatorElement = this.tabulatorInstance.getTabulatorElement();
+      this.groupState = (this.groupState + 1) % 3;
+
+      console.log("ss", tabulatorElement)
+      switch (this.groupState) {
+        case 0:
+          this.columnsList[0].visible = true;
+          this.tabulatorInstance.getTable().setGroupBy("request_name");
+          this.tabulatorInstance.showAllGroups();
+          tabulatorElement.classList.remove('no-group-by');
+          break;
+
+        case 1:
+          this.columnsList[0].visible = true;
+          this.tabulatorInstance.getTable().setGroupBy("request_name");
+          this.tabulatorInstance.hideAllGroups();
+          tabulatorElement.classList.remove('no-group-by');
+          break;
+
+        case 2:
+          this.columnsList[0].visible = false;
+          this.tabulatorInstance.getTable().setGroupBy(false);
+          tabulatorElement.classList.add('no-group-by');
+          break;
+      }
+    },
     toggleAdvancedFilters() {
       this.showAdvancedFilters = !this.showAdvancedFilters;
       if (this.showAdvancedFilters) {
@@ -659,6 +686,7 @@ export default {
       event.stopPropagation();
 
       const group = this.tabulatorInstance
+        .getTable()
         .getGroups()
         .find((g) => g.getKey() === groupValue);
       if (!group) return;
@@ -676,6 +704,7 @@ export default {
               checkbox.checked = true;
             }
           });
+          this.tabulatorInstance.showAllGroups();
           break;
 
         case "deselectAll":
@@ -688,6 +717,10 @@ export default {
               checkbox.checked = false;
             }
           });
+          this.tabulatorInstance.showAllGroups();
+          break;
+
+        case "sampleSubmitted":
           break;
 
         case "qualityPassed":
@@ -718,7 +751,6 @@ export default {
           break;
       }
 
-      this.tabulatorInstance.redraw();
     },
     setFilters() {
       let filteredData = this.librariesSamplesList.filter((row) => {
@@ -728,7 +760,7 @@ export default {
       });
 
       this.filteredLibrariesSamples = filteredData;
-      this.tabulatorInstance.setData(filteredData);
+      this.tabulatorInstance.getTable().setData(filteredData);
     },
     onSearch() {
       let lowercasedQuery = this.searchQuery.toLowerCase();
@@ -736,15 +768,14 @@ export default {
 
       if (lowercasedQuery.trim() === "") {
         filteredData = [...this.librariesSamplesList];
-        this.tabulatorInstance.setData(filteredData).then(() => {
-          this.tabulatorInstance.getGroups().forEach((group) => {
-            group.hide();
-          });
+        this.tabulatorInstance.getTable().setData(filteredData).then(() => {
+          this.tabulatorInstance.showAllGroups();
         });
         this.filteredLibrariesSamples = filteredData;
       } else {
         filteredData = [...this.librariesSamplesList].filter((row) => {
           return (
+            (row.request_name && row.request_name.toLowerCase().includes(lowercasedQuery)) ||
             (row.name && row.name.toLowerCase().includes(lowercasedQuery)) ||
             (row.barcode &&
               row.barcode.toLowerCase().includes(lowercasedQuery)) ||
@@ -760,10 +791,8 @@ export default {
               row.comments.toLowerCase().includes(lowercasedQuery))
           );
         });
-        this.tabulatorInstance.setData(filteredData).then(() => {
-          this.tabulatorInstance.getGroups().forEach((group) => {
-            group.show();
-          });
+        this.tabulatorInstance.getTable().setData(filteredData).then(() => {
+          this.tabulatorInstance.showAllGroups();
         });
         this.filteredLibrariesSamples = filteredData;
       }
@@ -798,15 +827,12 @@ export default {
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
-      this.tabulatorInstance.getGroups().forEach((group) => {
-        group.show();
-      });
-      this.tabulatorInstance.download("xlsx", filename, {
+      this.tabulatorInstance.showAllGroups();
+      this.tabulatorInstance.getTable().download("xlsx", filename, {
         sheetName: "Incoming Libraries & Samples"
       });
-      this.tabulatorInstance.getGroups().forEach((group) => {
-        group.hide();
-      });
+
+      showNotification("Data Exported Successfully.", "success");
     }
   }
 };
@@ -814,13 +840,10 @@ export default {
 
 <style>
 .parent-container {
+  width: 100%;
   display: flex;
   flex-direction: column;
   padding: 10px;
-}
-
-.table-container {
-  overflow-x: auto;
 }
 
 .header {

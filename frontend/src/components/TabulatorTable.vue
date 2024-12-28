@@ -48,7 +48,7 @@ export default {
         const options = {
           data: this.rowData,
           columns: this.columnDefs,
-          layout: "fitColumns",
+          layout: "fitDataStretch",
           columnDefaults: {
             headerSort: true,
             headerFilter: false,
@@ -90,6 +90,10 @@ export default {
           options
         );
 
+        this.tabulatorInstance.on("tableBuilt", () => {
+          this.showAllGroups();
+        });
+
         this.tabulatorInstance.on("cellEdited", (cell) => {
           let updatedData = { field: cell.getField(), value: cell.getValue() };
           let rowData = cell.getData();
@@ -98,6 +102,10 @@ export default {
           }
         });
       }
+    },
+
+    getTabulatorElement() {
+      return this.$refs.tabulatorTableRef;
     },
 
     updateTableData() {
@@ -112,6 +120,22 @@ export default {
       }
     },
 
+    showAllGroups() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.blockRedraw();
+        this.tabulatorInstance.getGroups().forEach((group) => group.show());
+        this.tabulatorInstance.restoreRedraw();
+      }
+    },
+
+    hideAllGroups() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.blockRedraw();
+        this.tabulatorInstance.getGroups().forEach((group) => group.hide());
+        this.tabulatorInstance.restoreRedraw();
+      }
+    },
+
     getTable() {
       return this.tabulatorInstance;
     }
@@ -122,17 +146,30 @@ export default {
 <style>
 .tabulator {
   font-size: 12px;
+  border: 1px solid grey;
 }
 
 .tabulator-table {
-  padding-bottom: 5px;
   height: 470px;
   background-color: #7788992d !important;
-  overflow-y: visible;
+  z-index: 10;
 }
 
 .tabulator-header {
-  border: 1px solid grey !important;
+  border: none !important;
+}
+
+.tabulator-tableholder {
+  overflow-x: scroll !important;
+}
+
+.tabulator-placeholder {
+  text-align: center;
+  width: 600px !important;
+  height: 487px !important;
+  overflow-x: scroll !important;
+  background-color: #7788992d !important;
+  white-space: nowrap;
 }
 
 .tabulator-cell {
@@ -143,29 +180,56 @@ export default {
   border-right: 1px solid grey !important;
 }
 
+.tabulator-cell.no-right-border {
+  border-right: none !important;
+}
+
 .tabulator-cell.disable-range-selection {
   pointer-events: none;
 }
 
 .tabulator-cell.tabulator-range-selected {
   background-color: #c0e7fd !important;
+  border: none !important;
+  color: #003757 !important;
+  border-bottom: 1px solid grey !important;
 }
 
 .tabulator-cell.tabulator-editing {
   background-color: lightgoldenrodyellow !important;
 }
 
+.tabulator-cell.tabulator-frozen {
+  z-index: 1 !important;
+}
+
+.tabulator-cell.details-column {
+  font-weight: bold !important;
+  color: darkslategrey !important;
+}
+
+.tabulator-cell.user-entry-column {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.tabulator-cell.facility-entry-column {
+  background-color: #c4ecc2;
+  color: #388e3c;
+}
+
 .tabulator-col {
   font-size: 13px;
   border-right: 1px solid grey !important;
+  border-bottom: 1px solid grey !important;
 }
 
-.tabulator-col-group {
-  border-right: 1px solid grey !important;
+.tabulator-col-vertical {
+  border-top: 1px solid grey !important;
 }
 
 .tabulator-col-group-cols {
-  border-top: 1px solid grey !important;
+  border: none !important;
 }
 
 .tabulator-row {
@@ -188,33 +252,22 @@ export default {
   align-items: center;
   justify-content: flex-start;
   background-color: #faf1d2;
+  z-index: 20;
 }
 
 .tabulator-row.tabulator-group:hover {
   background-color: #fff9e1;
 }
 
-.tabulator-cell.details-column {
-  font-weight: bold !important;
-  color: darkslategrey !important;
+.no-group-by .tabulator-row-odd:nth-child(1) {
+  margin-top: 5px;
 }
 
-.tabulator-cell.user-entry-column {
-  background-color: #ffebee;
-  color: #c62828;
+.no-group-by .tabulator-row-odd:nth-child(1) .tabulator-cell {
+  border-top: 1px solid grey !important;
 }
 
-.tabulator-cell.facility-entry-column {
-  background-color: #c4ecc2;
-  color: #388e3c;
-}
-
-.tabulator .tabulator-placeholder {
-  text-align: center;
-  width: 600px !important;
-  height: 487px !important;
-  overflow-x: scroll !important;
-  background-color: #7788992d !important;
-  white-space: nowrap;
+.text-align-left {
+  text-align: left !important;
 }
 </style>
