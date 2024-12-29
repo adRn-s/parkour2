@@ -12,7 +12,7 @@
       <!-- Sticky right section for search, advanced filters, and select columns -->
       <div class="sticky-actions">
         <div class="search-bar">
-          <input v-model="searchQuery" type="text" placeholder="Search" />
+          <input ref="searchInput" v-model="searchQuery" type="text" placeholder="Search" />
           <font-awesome-icon icon="fa-solid fa-magnifying-glass" style="color: darkgrey" />
         </div>
         <div class="button-popup-wrapper">
@@ -355,6 +355,7 @@ export default {
           title: "Barcode",
           field: "barcode",
           minWidth: 100,
+          maxWidth: 160,
           headerFilter: true,
           visible: true,
           frozen: true,
@@ -393,7 +394,6 @@ export default {
               title: "Comment Library/Input",
               field: "comments",
               minWidth: 100,
-              width: "9%",
               headerVertical: true,
               visible: true,
               vertAlign: "bottom",
@@ -590,7 +590,6 @@ export default {
               title: "Comment",
               field: "comments_facility",
               minWidth: 100,
-              width: "9%",
               editor: "input",
               headerVertical: true,
               visible: true,
@@ -734,23 +733,6 @@ export default {
 
       this.columnsList = updatedColumns;
       this.tabulatorInstance.getTable().setColumns(updatedColumns);
-      this.redistributeColumnWidths();
-    },
-    redistributeColumnWidths() {
-      const totalWidth = 100;
-      const visibleColumns = this.columnsList.filter((col) => col.visible);
-
-      const newWidth = totalWidth / visibleColumns.length;
-
-      this.columnsList = this.columnsList.map((col) => {
-        if (col.visible) {
-          return { ...col, width: newWidth };
-        }
-        return col;
-      });
-
-      this.tabulatorInstance.getTable().setColumns(this.columnsList);
-      this.tabulatorInstance.refreshTable();
     },
     handleGroupButtonClick(event, groupValue, action) {
       console.log(`Action: ${action} for group: ${groupValue}`);
@@ -869,6 +851,9 @@ export default {
         });
         this.filteredLibrariesSamples = filteredData;
       }
+      this.$nextTick(() => {
+        this.$refs.searchInput.focus();
+      });
     },
     async onCellValueChanged(rowData, updatedData) {
       try {

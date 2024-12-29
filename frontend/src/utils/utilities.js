@@ -9,8 +9,9 @@ export function showNotification(content, type) {
     timeout: 3000,
     toastClassName: "toast-main",
     bodyClassName: "toast-body",
-    containerClassName: "toast-container"
+    position: "top-right",
   };
+
   if (type === "info") toast.info(content, options);
   else if (type === "success") toast.success(content, options);
   else if (type === "error") toast.error(content, options);

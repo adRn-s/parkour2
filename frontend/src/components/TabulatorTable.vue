@@ -48,7 +48,7 @@ export default {
         const options = {
           data: this.rowData,
           columns: this.columnDefs,
-          layout: "fitDataStretch",
+          layout: "fitColumns",
           columnDefaults: {
             headerSort: true,
             headerFilter: false,
