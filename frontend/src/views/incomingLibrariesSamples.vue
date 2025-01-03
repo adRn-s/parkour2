@@ -333,7 +333,7 @@ export default {
           },
           hozAlign: "center",
           width: 50,
-          contextMenu: this.cellContextMenu(false, false, false),
+          contextMenu: () => this.cellContextMenu(false, false, false),
           cellClick: function (e, cell) {
             const clickedRow = cell.getRow();
             const rowData = clickedRow.getData();
@@ -349,7 +349,7 @@ export default {
           visible: true,
           frozen: true,
           cssClass: "details-column text-align-left",
-          contextMenu: this.cellContextMenu(true, false, false),
+          contextMenu: () => this.cellContextMenu(true, false, false),
         },
         {
           title: "Barcode",
@@ -360,7 +360,7 @@ export default {
           visible: true,
           frozen: true,
           cssClass: "details-column",
-          contextMenu: this.cellContextMenu(true, false, false),
+          contextMenu: () => this.cellContextMenu(true, false, false),
         },
         {
           title: "From Users",
@@ -377,7 +377,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
             },
             {
               title: "Protocol",
@@ -388,7 +388,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
             },
             {
               title: "Comment Library/Input",
@@ -398,7 +398,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
             },
             {
               title: "Input",
@@ -409,7 +409,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
             },
             {
               title: "Volume",
@@ -420,7 +420,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -438,7 +438,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "user-entry-column",
-              contextMenu: this.cellContextMenu(true, false, false),
+              contextMenu: () => this.cellContextMenu(true, false, false),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -472,7 +472,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 const value = cell.getValue();
                 const options = {
@@ -493,7 +493,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -512,7 +512,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -531,7 +531,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -550,7 +550,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               formatter: function (cell) {
                 let value = Number(cell.getValue());
                 if (!value) {
@@ -565,7 +565,7 @@ export default {
               minWidth: 60,
               width: "4%",
               editor: "list",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
               editorParams: {
                 values: [
                   { label: "Not Needed", value: "false" },
@@ -595,7 +595,7 @@ export default {
               visible: true,
               vertAlign: "bottom",
               cssClass: "facility-entry-column no-right-border",
-              contextMenu: this.cellContextMenu(true, true, true),
+              contextMenu: () => this.cellContextMenu(true, true, true),
             }
           ]
         }
@@ -603,36 +603,105 @@ export default {
     },
     cellContextMenu(allowCopy, allowPaste, allowApplyToAll) {
       const operations = [];
+      let isRangeSelected = false;
+      let selectedRanges = this.tabulatorInstance.getTable().getRangesData();
+      if (selectedRanges.length > 0) {
+        let firstRangeFields = Object.keys(selectedRanges[0][0]);
+        isRangeSelected = selectedRanges[0].length > 1 || firstRangeFields.length > 1;
+      }
+      if (isRangeSelected) {
+        if (allowCopy)
+          operations.push({
+            label: "Copy Range",
+            action: () => {
+              const rangeText = selectedRanges[0]
+                .map(row =>
+                  Object.values(row).join("\t")
+                )
+                .join("\n");
 
-      if (allowCopy) {
-        operations.push({
-          label: "Copy",
-          action: (e, cell) => {
-            const value = cell.getValue();
-            navigator.clipboard.writeText(value);
-          }
-        });
+              navigator.clipboard.writeText(rangeText).then(() => {
+                showNotification("Range copied to clipboard.", "success");
+              }).catch(err => {
+                showNotification("Failed to copy range.", "error");
+              });
+            },
+          });
+
+        if (allowPaste)
+          operations.push({
+            label: "Paste Range",
+            action: () => {
+              const ranges = this.tabulatorInstance.getTable().getRanges();
+
+              if (!ranges || ranges.length === 0) {
+                console.warn("No valid range selected for pasting.");
+                return;
+              }
+              const parsedRows = [];
+
+              navigator.clipboard.readText().then((text) => {
+                parsedRows.push(text.split("\n").map(row => row.split("\t")));
+                console.log(parsedRows);
+                console.log(ranges);
+
+                ranges.forEach((range, rangeIndex) => {
+                  const startRow = range.start.row;
+                  const startColumn = range.start.col;
+
+                  parsedRows.forEach((rowData, rowIndex) => {
+                    const targetRow = this.tabulatorInstance.getTable().getRowFromPosition(startRow.index + rowIndex);
+
+                    if (targetRow) {
+                      rowData.forEach((cellData, colIndex) => {
+                        const targetCell = targetRow.getCell(startColumn.field);
+                        if (targetCell) {
+                          targetCell.setValue(cellData);
+                        }
+                      });
+                    }
+                  });
+                });
+              });
+            },
+          });
+      } else {
+        if (allowCopy) {
+          operations.push({
+            label: "Copy",
+            action: (e, cell) => {
+              const value = cell.getValue();
+              navigator.clipboard.writeText(value);
+            },
+          });
+        }
+
+        if (allowPaste) {
+          operations.push({
+            label: "Paste",
+            action: (e, cell) => {
+              navigator.clipboard.readText().then((text) => {
+                cell.setValue(text);
+              });
+            },
+          });
+        }
+
+        if (allowApplyToAll) {
+          operations.push({
+            label: "Apply to All",
+            action: (e, cell) => {
+              const value = cell.getValue();
+              const field = cell.getField();
+              this.tabulatorInstance.getTable().getRows().forEach((row) => {
+                if (row.getData().request_name === cell.getRow().getData().request_name)
+                  row.getCell(field).setValue(value);
+              });
+            },
+          });
+        }
       }
-      if (allowPaste) {
-        operations.push({
-          label: "Paste",
-          action: (e, cell) => {
-            navigator.clipboard.readText().then((text) => {
-              cell.setValue(text);
-            });
-          }
-        });
-      }
-      if (allowApplyToAll) {
-        operations.push({
-          label: "Apply to All",
-          action: (e, cell) => {
-            const value = cell.getValue();
-            const rowData = cell.getRow().getData();
-            console.log(`Editing ${cell.getField()} for ${rowData.name}`, value, cell);
-          }
-        });
-      }
+
       return operations.length ? operations : [];
     },
     handleOutsideClick(event) {

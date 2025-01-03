@@ -60,7 +60,7 @@ export default {
           tooltips: true,
           resizableColumns: true,
           groupToggleElement: "header",
-          groupStartOpen: false,
+          groupStartOpen: true,
           selectable: true,
           selectableRange: 1,
           selectableRangeColumns: false,
@@ -68,7 +68,7 @@ export default {
           selectableRangeClearCells: false,
           editTriggerEvent: "dblclick",
           clipboard: true,
-          clipboardCopyStyled: true,
+          clipboardCopyStyled: false,
           clipboardCopyConfig: {
             formatCells: false,
             rowHeaders: false,
@@ -95,11 +95,11 @@ export default {
         });
 
         this.tabulatorInstance.on("cellEdited", (cell) => {
-          let updatedData = { field: cell.getField(), value: cell.getValue() };
-          let rowData = cell.getData();
-          if (this.tableOptions?.onCellValueChanged) {
-            this.tableOptions.onCellValueChanged(rowData, updatedData);
-          }
+          // let updatedData = { field: cell.getField(), value: cell.getValue() };
+          // let rowData = cell.getData();
+          // if (this.tableOptions?.onCellValueChanged) {
+          //   this.tableOptions.onCellValueChanged(rowData, updatedData);
+          // }
         });
 
         this.tabulatorInstance.on("columnResized", () => {
@@ -207,6 +207,7 @@ export default {
 
 .tabulator-cell.tabulator-editing {
   background-color: lightgoldenrodyellow !important;
+  padding-left: 10px !important;
 }
 
 .tabulator-cell.tabulator-frozen {
