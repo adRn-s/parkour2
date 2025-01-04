@@ -77,6 +77,22 @@ export default {
           clipboardCopyRowRange: "range",
           clipboardPasteParser: "range",
           clipboardPasteAction: "range",
+          // clipboardPasteParser: (clipboard) => {
+          //   const rows= this.tabulatorInstance.getRows();
+          //         return rows.map(row => {
+          //             return row.map((cell, colIndex) => {
+          //                 const column = table.getColumnDefinitions()[colIndex];
+          //                 if (column.columns[colIndex].editor) {
+          //                     // Allow pasting only in editable columns
+          //                     return cell;
+          //                 } else {
+          //                     // Prevent pasting in non-editable columns
+          //                     return null;
+          //                 }
+          //             });
+          //         });
+          //     },
+          //     clipboardPasteAction: "update",
           dependencies: {
             XLSX: XLSX
           },
@@ -89,10 +105,6 @@ export default {
           this.$refs.tabulatorTableRef,
           options
         );
-
-        this.tabulatorInstance.on("tableBuilt", () => {
-          this.showAllGroups();
-        });
 
         this.tabulatorInstance.on("cellEdited", (cell) => {
           // let updatedData = { field: cell.getField(), value: cell.getValue() };
@@ -112,20 +124,77 @@ export default {
       return this.$refs.tabulatorTableRef;
     },
 
-    updateTableData() {
+    updateTableData() {  // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error. Hence only using table update methods.
       if (this.tabulatorInstance) {
-        this.tabulatorInstance.replaceData(this.rowData);
+
+        if (!this.rowData || !Array.isArray(this.rowData)) {
+          console.warn("No valid rowData provided.");
+          return;
+        }
+
+        const currentData = this.tabulatorInstance.getData(); // Fetch current data from the table
+        const currentIds = currentData.map((row) => row.id); // Extract existing row IDs (ensure 'id' field is unique)
+        const newIds = this.rowData.map((row) => row.id); // Extract IDs from the new data
+
+        const newData = [];
+        const updatedData = [];
+        const removedDataIds = [];
+
+        // Split data into updated and new rows based on their IDs
+        this.rowData.forEach((row) => {
+          if (currentIds.includes(row.id)) {
+            updatedData.push(row); // Update rows with matching IDs
+          } else {
+            newData.push(row); // Add new rows with unique IDs
+          }
+        });
+
+        // Identify rows to remove (IDs in current data but not in new data)
+        currentIds.forEach((id) => {
+          if (!newIds.includes(id)) {
+            removedDataIds.push(id);
+          }
+        });
+
+        // Use updateData for updating existing rows
+        if (updatedData.length > 0) {
+          this.tabulatorInstance.updateData(updatedData).then(() => {
+            console.log("Rows updated successfully.");
+          }).catch((error) => {
+            console.error("Error updating rows:", error);
+          });
+        }
+
+        // Use updateOrAddData for new rows to add
+        if (newData.length > 0) {
+          this.tabulatorInstance.updateOrAddData(newData).then(() => {
+            console.log("New rows added successfully.");
+          }).catch((error) => {
+            console.error("Error adding new rows:", error);
+          });
+        }
+
+        // Remove rows that no longer exist in the new data
+        if (removedDataIds.length > 0) {
+          this.tabulatorInstance.deleteRow(removedDataIds).then(() => {
+            console.log("Old rows removed successfully.");
+          }).catch((error) => {
+            console.error("Error removing old rows:", error);
+          });
+        }
       }
     },
 
     updateTableColumns() {
       if (this.tabulatorInstance) {
+        this.tabulatorInstance.blockRedraw();
         this.tabulatorInstance.setColumns(this.columnDefs);
-        this.tabulatorInstance.redraw(true);
+        this.tabulatorInstance.restoreRedraw();
+        this.refreshTable();
       }
     },
 
-    showAllGroups() {
+    showAllGroups() { // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error. Hence not using this function.
       if (this.tabulatorInstance) {
         this.tabulatorInstance.blockRedraw();
         this.tabulatorInstance.getGroups().forEach((group) => group.show());
@@ -143,7 +212,14 @@ export default {
 
     refreshTable() {
       if (this.tabulatorInstance) {
-        this.tabulatorInstance.redraw(true);
+        this.tabulatorInstance.redraw();
+      }
+    },
+
+    recreateTable() {
+      if (this.tabulatorInstance) {
+        this.tabulatorInstance.destroy();
+        this.initializeTable();
       }
     },
 
@@ -185,9 +261,11 @@ export default {
 .tabulator-cell {
   height: 35px !important;
   line-height: 10px;
-  text-align: center;
   border-bottom: 1px solid grey !important;
   border-right: 1px solid grey !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tabulator-cell.no-right-border {
@@ -227,6 +305,10 @@ export default {
 .tabulator-cell.facility-entry-column {
   background-color: #c4ecc2;
   color: #388e3c;
+}
+
+.tabulator-col-title {
+  padding-right: 12px !important;
 }
 
 .tabulator-col {
@@ -278,7 +360,8 @@ export default {
   border-top: 1px solid grey !important;
 }
 
-.text-align-left {
-  text-align: left !important;
+.checkbox-column,
+.empty-column {
+  padding: 12px 8px !important;
 }
 </style>

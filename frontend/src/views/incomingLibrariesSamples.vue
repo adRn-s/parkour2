@@ -1,9 +1,9 @@
 <template>
   <div class="parent-container">
     <!-- Loading overlay -->
-    <div v-if="loading" class="loading-overlay">
+    <div v-if="loading || fakeLoading" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Loading Incoming Libraries and Samples...</p>
+      <p v-if="!fakeLoading">Loading Incoming Libraries and Samples...</p>
     </div>
     <!-- Header -->
     <div class="header">
@@ -16,15 +16,11 @@
           <font-awesome-icon icon="fa-solid fa-magnifying-glass" style="color: darkgrey" />
         </div>
         <div class="button-popup-wrapper">
-          <button @click="toggleGroups">
-            <font-awesome-icon icon="fa-solid fa-layer-group" style="color: white" />
-            Toggle Views
-          </button>
-        </div>
-        <div class="button-popup-wrapper">
-          <button id="toggleAdvancedFiltersButton" @click="toggleAdvancedFilters">
+          <button class="header-button" id="toggleAdvancedFiltersButton" @click="toggleAdvancedFilters">
             <font-awesome-icon icon="fa-solid fa-filter" style="color: white" />
-            Advanced Filters
+            <span>
+              Advanced Filters
+            </span>
           </button>
           <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container">
             <label>
@@ -38,15 +34,17 @@
           </div>
         </div>
         <div class="button-popup-wrapper">
-          <button id="toggleSelectColumnsButton" @click="toggleSelectColumns">
+          <button class="header-button" id="toggleSelectColumnsButton" @click="toggleSelectColumns">
             <font-awesome-icon icon="fa-solid fa-columns" style="color: white" />
-            Select Columns
+            <span>
+              Select Columns
+            </span>
           </button>
           <div id="selectColumnsPopup" v-if="showSelectColumns" class="button-popup-container"
             style="left: -50px; width: 250px; padding-right: 8px; padding-top: 10px; padding-bottom: 10px;">
             <ul style="padding-left: 0px; padding-right: 10px; max-height: 300px; overflow-y: auto;">
               <li v-for="(column, index) in columnsList" :key="index" style="list-style: none;">
-                <template v-if="column.field !== 'select'">
+                <template v-if="column.field !== 'select' && column.field !== 'empty-column'">
                   <label
                     :style="{ backgroundColor: column.columns ? '#faf1d2' : 'white', cursor: column.columns ? 'default' : 'pointer' }">
                     <input v-if="!column.columns" type="checkbox" :checked="column.visible"
@@ -71,9 +69,19 @@
             </ul>
           </div>
         </div>
-        <button @click="exportToExcel">
+        <div class="button-popup-wrapper">
+          <button class="header-button" @click="toggleGroups">
+            <font-awesome-icon icon="fa-solid fa-layer-group" style="color: white" />
+            <span>
+              Toggle Views
+            </span>
+          </button>
+        </div>
+        <button class="header-button" @click="exportToExcel">
           <font-awesome-icon icon="fa-solid fa-file-excel" style="color: white" />
-          Export to Excel
+          <span>
+            Export to Excel
+          </span>
         </button>
       </div>
     </div>
@@ -108,11 +116,13 @@ export default {
     return {
       tabulatorInstance: null,
       loading: true,
+      fakeLoading: false,
       librariesSamplesList: [],
       filteredLibrariesSamples: [],
       columnsList: [],
       groupState: 0,
       tableOptions: {
+        index: "pk",
         groupBy: "request_name",
         placeholder: "No Libraries and Samples to show.",
         groupHeader: (value, count, data) => {
@@ -129,8 +139,8 @@ export default {
                 <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.3" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="green"/>
-                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M9 12L10.8189 13.8189V13.8189C10.9189 13.9189 11.0811 13.9189 11.1811 13.8189V13.8189L15 10" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 12L10.8189 13.8189V13.8189C10.9189 13.9189 11.0811 13.9189 11.1811 13.8189V13.8189L15 10" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   </g>
                 </svg>
               </div>`
@@ -139,7 +149,7 @@ export default {
                 <svg title="Sample not Submitted" fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.1" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="#323232"/>
-                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   </g>
                 </svg>
               </div>`
@@ -157,9 +167,9 @@ export default {
           <g>
             <path opacity="0.5" d="M21 12H12V3H15.024C19.9452 3 21 4.05476 21 8.976V12Z" fill="lightblue"/>
             <path opacity="0.5" d="M3 15.024V12H12V21H8.976C4.05476 21 3 19.9452 3 15.024Z" fill="lightblue"/>
-            <path d="M3 8.976C3 4.05476 4.05476 3 8.976 3H15.024C19.9452 3 21 4.05476 21 8.976V15.024C21 19.9452 19.9452 21 15.024 21H8.976C4.05476 21 3 19.9452 3 15.024V8.976Z" stroke="#323232" stroke-width="2"/>
-            <path d="M12 3V21" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12L3 12" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 8.976C3 4.05476 4.05476 3 8.976 3H15.024C19.9452 3 21 4.05476 21 8.976V15.024C21 19.9452 19.9452 21 15.024 21H8.976C4.05476 21 3 19.9452 3 15.024V8.976Z" stroke="#323232" stroke-width="1.8"/>
+            <path d="M12 3V21" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12L3 12" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </g>
         </svg>
       </div>
@@ -167,7 +177,7 @@ export default {
         <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.5" d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" fill="lightblue"/>
-            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"/>
+            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="1.8"/>
           </g>
         </svg>
       </div>
@@ -175,8 +185,8 @@ export default {
         <svg fill="none" width="24px" height="24px"version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.5" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="white"/>
-            <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 12L10.8189 13.8189V13.8189C10.9189 13.9189 11.0811 13.9189 11.1811 13.8189V13.8189L15 10" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 12L10.8189 13.8189V13.8189C10.9189 13.9189 11.0811 13.9189 11.1811 13.8189V13.8189L15 10" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </g>
         </svg>
       </div>
@@ -184,8 +194,8 @@ export default {
         <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.3" d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" fill="green"/>
-            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"/>
-            <path d="M9 12L10.6828 13.6828V13.6828C10.858 13.858 11.142 13.858 11.3172 13.6828V13.6828L15 10" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="1.8"/>
+            <path d="M9 12L10.6828 13.6828V13.6828C10.858 13.858 11.142 13.858 11.3172 13.6828V13.6828L15 10" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </g>
         </svg>
       </div>
@@ -193,9 +203,9 @@ export default {
         <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.3" d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" fill="red"/>
-            <path d="M9 9L15 15" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M15 9L9 15" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"/>
+            <path d="M9 9L15 15" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 9L9 15" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="1.8"/>
           </g>
         </svg>
       </div>
@@ -203,9 +213,9 @@ export default {
         <svg fill="none" width="40px" height="40px" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.3" d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" fill="orange"/>
-            <path d="M12 8L12 13" stroke="#323232" stroke-width="2" stroke-linecap="round"/>
-            <path d="M12 16V15.9888" stroke="#323232" stroke-width="2" stroke-linecap="round"/>
-            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"/>
+            <path d="M12 8L12 13" stroke="#323232" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M12 16V15.9888" stroke="#323232" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="1.8"/>
           </g>
         </svg>
       </div>
@@ -318,6 +328,15 @@ export default {
     setColumns() {
       this.columnsList = [
         {
+          field: "empty-column",
+          cssClass: "empty-column",
+          visible: false,
+          headerSort: false,
+          frozen: true,
+          resizable: false,
+          width: 36,
+        },
+        {
           field: "select",
           visible: true,
           headerSort: false,
@@ -332,14 +351,15 @@ export default {
             return checkbox;
           },
           hozAlign: "center",
-          width: 50,
+          width: 36,
+          cssClass: "checkbox-column",
           contextMenu: () => this.cellContextMenu(false, false, false),
           cellClick: function (e, cell) {
             const clickedRow = cell.getRow();
             const rowData = clickedRow.getData();
             const checkbox = e.target;
             rowData.selected = checkbox.checked;
-          }
+          },
         },
         {
           title: "Name",
@@ -348,18 +368,17 @@ export default {
           headerFilter: true,
           visible: true,
           frozen: true,
-          cssClass: "details-column text-align-left",
+          cssClass: "details-column",
           contextMenu: () => this.cellContextMenu(true, false, false),
         },
         {
           title: "Barcode",
           field: "barcode",
-          minWidth: 100,
-          maxWidth: 160,
+          width: 98,
           headerFilter: true,
           visible: true,
           frozen: true,
-          cssClass: "details-column",
+          cssClass: "details-column barcode-column",
           contextMenu: () => this.cellContextMenu(true, false, false),
         },
         {
@@ -563,7 +582,7 @@ export default {
               title: "GMO Documentation",
               field: "gmo",
               minWidth: 60,
-              width: "4%",
+              width: "6%",
               editor: "list",
               contextMenu: () => this.cellContextMenu(true, true, true),
               editorParams: {
@@ -646,8 +665,8 @@ export default {
                 console.log(ranges);
 
                 ranges.forEach((range, rangeIndex) => {
-                  const startRow = range.start.row;
-                  const startColumn = range.start.col;
+                  const startRow = range._range.start.row;
+                  const startColumn = range._range.start.col;
 
                   parsedRows.forEach((rowData, rowIndex) => {
                     const targetRow = this.tabulatorInstance.getTable().getRowFromPosition(startRow.index + rowIndex);
@@ -736,22 +755,30 @@ export default {
         this.showSelectColumns = false;
       }
     },
-    toggleGroups() {
+    toggleGroups(goToInitial) {
+      this.fakeLoading = true;
       const tabulatorElement = this.tabulatorInstance.getTabulatorElement();
-      this.groupState = (this.groupState + 1) % 3;
+      if (goToInitial === true) {
+        this.tabulatorInstance.getTable().setGroupBy(false);
+        this.groupState = 0;
+      } else {
+        this.groupState = (this.groupState + 1) % 3;
+      }
 
+      console.log(`Group state: ${this.groupState}`);
       switch (this.groupState) {
         case 0:
           tabulatorElement.classList.remove('no-group-by');
           this.tabulatorInstance.getTable().showColumn("select");
+          this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
-          this.tabulatorInstance.showAllGroups();
           this.tabulatorInstance.refreshTable();
           break;
 
         case 1:
           tabulatorElement.classList.remove('no-group-by');
           this.tabulatorInstance.getTable().showColumn("select");
+          this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
           this.tabulatorInstance.hideAllGroups();
           this.tabulatorInstance.refreshTable();
@@ -759,11 +786,15 @@ export default {
 
         case 2:
           tabulatorElement.classList.add('no-group-by');
+          this.tabulatorInstance.getTable().showColumn("empty-column");
           this.tabulatorInstance.getTable().hideColumn("select");
           this.tabulatorInstance.getTable().setGroupBy(false);
           this.tabulatorInstance.refreshTable();
           break;
       }
+      setTimeout(() => {
+        this.fakeLoading = false;
+      }, 200);
     },
     toggleAdvancedFilters() {
       this.showAdvancedFilters = !this.showAdvancedFilters;
@@ -882,9 +913,6 @@ export default {
       });
 
       this.filteredLibrariesSamples = filteredData;
-      this.tabulatorInstance.getTable().setData(filteredData).then(() => {
-        this.tabulatorInstance.showAllGroups();
-      });
     },
     onSearch() {
       let lowercasedQuery = this.searchQuery.toLowerCase();
@@ -892,10 +920,6 @@ export default {
 
       if (lowercasedQuery.trim() === "") {
         filteredData = [...this.librariesSamplesList];
-        this.tabulatorInstance.getTable().setData(filteredData).then(() => {
-          this.tabulatorInstance.showAllGroups();
-        });
-        this.filteredLibrariesSamples = filteredData;
       } else {
         filteredData = [...this.librariesSamplesList].filter((row) => {
           return (
@@ -915,11 +939,8 @@ export default {
               row.comments.toLowerCase().includes(lowercasedQuery))
           );
         });
-        this.tabulatorInstance.getTable().setData(filteredData).then(() => {
-          this.tabulatorInstance.showAllGroups();
-        });
-        this.filteredLibrariesSamples = filteredData;
       }
+      this.filteredLibrariesSamples = filteredData;
       this.$nextTick(() => {
         this.$refs.searchInput.focus();
       });
@@ -954,12 +975,12 @@ export default {
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
-      this.tabulatorInstance.showAllGroups();
+      this.toggleGroups(true);
       this.tabulatorInstance.getTable().download("xlsx", filename, {
         sheetName: "Incoming Libraries & Samples"
       });
 
-      showNotification("Data Exported Successfully.", "success");
+      showNotification("Data Exported Successfully.", "failure");
     }
   }
 };
@@ -987,6 +1008,10 @@ export default {
   margin: 0;
   font-size: 18px;
   color: white;
+  padding-right: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sticky-actions {
@@ -1041,6 +1066,13 @@ button {
   cursor: pointer;
   gap: 8px;
   transition: background-color 0.3s ease;
+}
+
+
+button span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 button:hover {
@@ -1136,6 +1168,66 @@ input[type="checkbox"]:checked::after {
   padding: 0 5px;
   height: 24px;
   width: 24px;
+}
+
+@media (max-width: 1400px) {
+  .header h1 {
+    min-width: 80px;
+  }
+
+  .search-bar {
+    width: 280px;
+  }
+
+  .search-bar input {
+    padding: 8px;
+  }
+
+  .header-button {
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .search-bar {
+    width: 250px;
+  }
+
+  .search-bar input {
+    padding: 6px;
+  }
+
+  .header-button span {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 16px;
+  }
+
+  .search-bar {
+    width: 130px;
+  }
+
+  .search-bar input {
+    width: 85px;
+  }
+}
+
+@media (max-width: 500px) {
+  .header h1 {
+    display: none;
+  }
+
+  .search-bar {
+    display: none;
+  }
+
+  .header-button {
+    display: none;
+  }
 }
 
 .loading-overlay {

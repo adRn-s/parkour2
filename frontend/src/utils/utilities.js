@@ -19,7 +19,11 @@ export function showNotification(content, type) {
 }
 
 export function handleError(error) {
-  if (error.response.status && error.response.status === 403) {
+  if (
+    error.response &&
+    error.response.status &&
+    error.response.status === 403
+  ) {
     let slices = window.location.href.split("/vue/");
     window.location.href =
       urlStringStartsWith() + "/login/?next=/vue/" + slices[1];
