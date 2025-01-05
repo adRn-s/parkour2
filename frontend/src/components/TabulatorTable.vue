@@ -124,7 +124,8 @@ export default {
       return this.$refs.tabulatorTableRef;
     },
 
-    updateTableData() {  // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error. Hence only using table update methods.
+    // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error. Hence only using table update methods.
+    updateTableData() {
       if (this.tabulatorInstance) {
 
         if (!this.rowData || !Array.isArray(this.rowData)) {
@@ -194,7 +195,8 @@ export default {
       }
     },
 
-    showAllGroups() { // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error. Hence not using this function.
+    // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error. Hence not using this function.
+    showAllGroups() {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.blockRedraw();
         this.tabulatorInstance.getGroups().forEach((group) => group.show());
@@ -307,10 +309,6 @@ export default {
   color: #388e3c;
 }
 
-.tabulator-col-title {
-  padding-right: 12px !important;
-}
-
 .tabulator-col {
   font-size: 13px;
   border-right: 1px solid grey !important;
@@ -352,6 +350,10 @@ export default {
   background-color: #fff9e1;
 }
 
+.barcode-column .tabulator-col-title {
+  padding-right: 12px !important;
+}
+
 .no-group-by .tabulator-row-odd:nth-child(1) {
   margin-top: 5px;
 }
@@ -360,8 +362,12 @@ export default {
   border-top: 1px solid grey !important;
 }
 
-.checkbox-column,
-.empty-column {
+.checkbox-column:not(.tabulator-col),
+.empty-column:not(.tabulator-col) {
   padding: 12px 8px !important;
+}
+
+.name-column:not(.tabulator-col) {
+  padding: 8px 8px !important;
 }
 </style>

@@ -277,10 +277,10 @@ export default {
           request_id: element.request,
           request_name: element.request_name,
           name: element.name,
-          type: element.barcode[2] === "L" ? "L" : "S",
+          type: element.barcode[2],
           barcode: element.barcode,
           sample_submitted: element.sample_submitted,
-          nucleic_acid_type_name: element.nucleic_acid_type_name || "-",
+          nucleic_acid_type_name: element.nucleic_acid_type_name,
           library_protocol_name: element.library_protocol_name,
           measuring_unit: element.measuring_unit,
           measured_value: element.measured_value,
@@ -294,16 +294,16 @@ export default {
                     element.measuring_unit
                   )}`
                   : `${String(element.measured_value || "")}`,
-          volume: element.volume || "-",
-          mean_fragment_size: element.mean_fragment_size || "-",
+          volume: element.volume,
+          mean_fragment_size: element.mean_fragment_size,
           comments: element.comments,
-          measuring_unit_facility: element.measuring_unit_facility || "-",
-          measured_value_facility: element.measured_value_facility || "-",
-          sample_volume_facility: element.sample_volume_facility || "-",
-          size_distribution_facility: element.size_distribution_facility || "-",
-          rna_quality: element.rna_quality || "-",
+          measuring_unit_facility: element.measuring_unit_facility,
+          measured_value_facility: element.measured_value_facility,
+          sample_volume_facility: element.sample_volume_facility,
+          size_distribution_facility: element.size_distribution_facility,
+          rna_quality: element.rna_quality,
           gmo: element.gmo,
-          comments_facility: element.comments_facility || ""
+          comments_facility: element.comments_facility
         }));
         this.librariesSamplesList = fetchedRows;
         this.filteredLibrariesSamples = fetchedRows;
@@ -326,299 +326,353 @@ export default {
       }
     },
     setColumns() {
-      this.columnsList = [
-        {
-          field: "empty-column",
-          cssClass: "empty-column",
-          visible: false,
-          headerSort: false,
-          frozen: true,
-          resizable: false,
-          width: 36,
-        },
-        {
-          field: "select",
-          visible: true,
-          headerSort: false,
-          frozen: true,
-          resizable: false,
-          formatter: function (cell) {
-            const row = cell.getRow();
-            const rowData = row.getData();
-            const checkbox = `<input type="checkbox" style="top:-4px" ${rowData.selected ? "checked" : ""
-              } />`;
+      const storedColumnState = JSON.parse(localStorage.getItem("columnSettings"));
 
-            return checkbox;
+      if (false) {
+        this.columnsList = storedColumnState;
+      }
+      else {
+        this.columnsList = [
+          {
+            field: "empty-column",
+            cssClass: "empty-column",
+            visible: false,
+            headerSort: false,
+            frozen: true,
+            resizable: false,
+            width: 36,
           },
-          hozAlign: "center",
-          width: 36,
-          cssClass: "checkbox-column",
-          contextMenu: () => this.cellContextMenu(false, false, false),
-          cellClick: function (e, cell) {
-            const clickedRow = cell.getRow();
-            const rowData = clickedRow.getData();
-            const checkbox = e.target;
-            rowData.selected = checkbox.checked;
+          {
+            field: "select",
+            visible: true,
+            headerSort: false,
+            frozen: true,
+            resizable: false,
+            formatter: (cell) => {
+              const row = cell.getRow();
+              const rowData = row.getData();
+              const checkbox = `<input type="checkbox" title="Select" style="top:-4px" ${rowData.selected ? "checked" : ""
+                } />`;
+
+              return checkbox;
+            },
+            hozAlign: "center",
+            width: 36,
+            cssClass: "checkbox-column",
+            contextMenu: () => this.cellContextMenu(false, false, false),
+            cellClick: function (e, cell) {
+              const clickedRow = cell.getRow();
+              const rowData = clickedRow.getData();
+              const checkbox = e.target;
+              rowData.selected = checkbox.checked;
+            },
           },
-        },
-        {
-          title: "Name",
-          field: "name",
-          minWidth: 220,
-          headerFilter: true,
-          visible: true,
-          frozen: true,
-          cssClass: "details-column",
-          contextMenu: () => this.cellContextMenu(true, false, false),
-        },
-        {
-          title: "Barcode",
-          field: "barcode",
-          width: 98,
-          headerFilter: true,
-          visible: true,
-          frozen: true,
-          cssClass: "details-column barcode-column",
-          contextMenu: () => this.cellContextMenu(true, false, false),
-        },
-        {
-          title: "From Users",
-          headerHozAlign: "left",
-          vertAlign: "bottom",
-          visible: true,
-          columns: [
-            {
-              title: "Input Type",
-              field: "nucleic_acid_type_name",
-              minWidth: 80,
-              width: "6%",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-            },
-            {
-              title: "Protocol",
-              field: "library_protocol_name",
-              minWidth: 80,
-              width: "6%",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-            },
-            {
-              title: "Comment Library/Input",
-              field: "comments",
-              minWidth: 100,
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-            },
-            {
-              title: "Input",
-              field: "input",
-              minWidth: 60,
-              width: "4%",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-            },
-            {
-              title: "Volume",
-              field: "volume",
-              minWidth: 60,
-              width: "4%",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
+          {
+            title: "Name",
+            field: "name",
+            minWidth: 220,
+            headerFilter: true,
+            visible: true,
+            frozen: true,
+            cssClass: "details-column name-column",
+            contextMenu: () => this.cellContextMenu(true, false, false),
+            formatter: (cell) => {
+              const barcode = cell.getRow().getData().barcode;
+              const name = cell.getValue();
+              if (barcode && barcode.length > 2) {
+                const tag = barcode[2];
+                if (tag === "L" || tag === "S") {
+                  const bgColor = tag === "S" ? "#00800080" : "lightblue";
+                  return `
+                        <div style="display: flex; align-items: center;">
+                          <span style="
+                            display: inline-block;
+                            background-color: ${bgColor};
+                            color: white;
+                            font-size: 10px;
+                            font-weight: bold;
+                            padding: 2px 4px;
+                            border: 2px solid #333;
+                            border-radius: 4px;
+                            margin-right: 8px;
+                          ">
+                            ${tag}
+                          </span>
+                          <span style="font-weight:bold;">${name}</span>
+                        </div>
+                      `;
                 }
-                return value % 1 === 0 ? value.toFixed(1) : value;
               }
+              return name;
             },
-            {
-              title: "Size",
-              field: "mean_fragment_size",
-              minWidth: 60,
-              width: "4%",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "user-entry-column",
-              contextMenu: () => this.cellContextMenu(true, false, false),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
+            contextMenu: () => this.cellContextMenu(true, false, false),
+          },
+          {
+            title: "Barcode",
+            field: "barcode",
+            width: 98,
+            headerFilter: true,
+            visible: true,
+            frozen: true,
+            cssClass: "details-column barcode-column",
+            contextMenu: () => this.cellContextMenu(true, false, false),
+          },
+          {
+            title: "From Users",
+            headerHozAlign: "left",
+            vertAlign: "bottom",
+            visible: true,
+            columns: [
+              {
+                title: "Input Type",
+                field: "nucleic_acid_type_name",
+                minWidth: 80,
+                width: "6%",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  return value || "No Input Type";
                 }
-                return value % 1 === 0 ? value.toFixed(1) : value;
-              }
-            }
-          ]
-        },
-        {
-          title: "From Facility",
-          headerHozAlign: "left",
-          vertAlign: "bottom",
-          visible: true,
-          columns: [
-            {
-              title: "Measuring Unit",
-              field: "measuring_unit_facility",
-              minWidth: 80,
-              width: "6%",
-              editor: "list",
-              editorParams: {
-                values: [
-                  { label: "ng/µl (Concentration)", value: "concentration" },
-                  { label: "M (Cells)", value: "m" },
-                  { label: "Unknown", value: "-" }
-                ]
               },
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              formatter: function (cell) {
-                const value = cell.getValue();
-                const options = {
-                  concentration: "ng/µl (Concentration)",
-                  m: "M (Cells)",
-                  "-": "Unknown"
-                };
-                return options[value] || value || "";
-              }
-            },
-            {
-              title: "Measured Value",
-              field: "measured_value_facility",
-              minWidth: 60,
-              width: "4%",
-              editor: "number",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
+              {
+                title: "Protocol",
+                field: "library_protocol_name",
+                minWidth: 80,
+                width: "6%",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  return value || "No Protocol";
                 }
-                if (value) return value % 1 === 0 ? value.toFixed(1) : value;
-              }
-            },
-            {
-              title: "Volume",
-              field: "sample_volume_facility",
-              minWidth: 60,
-              width: "4%",
-              editor: "number",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
-                }
-                return value % 1 === 0 ? value.toFixed(1) : value;
-              }
-            },
-            {
-              title: "Size",
-              field: "size_distribution_facility",
-              minWidth: 60,
-              width: "4%",
-              editor: "number",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
-                }
-                return value % 1 === 0 ? value.toFixed(1) : value;
-              }
-            },
-            {
-              title: "RQN",
-              field: "rna_quality",
-              minWidth: 60,
-              width: "4%",
-              editor: "number",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              formatter: function (cell) {
-                let value = Number(cell.getValue());
-                if (!value) {
-                  return "-";
-                }
-                return value % 1 === 0 ? value.toFixed(1) : value;
-              }
-            },
-            {
-              title: "GMO Documentation",
-              field: "gmo",
-              minWidth: 60,
-              width: "6%",
-              editor: "list",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-              editorParams: {
-                values: [
-                  { label: "Not Needed", value: "false" },
-                  { label: "Risk Assessment Done", value: "true" }
-                ]
               },
-              headerFilter: false,
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column",
-              formatter: function (cell) {
-                const value = cell.getValue();
-                const options = {
-                  false: "Not Needed",
-                  true: "Risk Assessment Done"
-                };
-                return options[value] || value || "";
+              {
+                title: "Comment Library/Input",
+                field: "comments",
+                minWidth: 100,
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  return value || "Empty";
+                }
+              },
+              {
+                title: "Input",
+                field: "input",
+                minWidth: 60,
+                width: "4%",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+              },
+              {
+                title: "Volume",
+                field: "volume",
+                minWidth: 60,
+                width: "4%",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
+              },
+              {
+                title: "Size",
+                field: "mean_fragment_size",
+                minWidth: 60,
+                width: "4%",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "user-entry-column",
+                contextMenu: () => this.cellContextMenu(true, false, false),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
               }
-            },
-            {
-              title: "Comment",
-              field: "comments_facility",
-              minWidth: 100,
-              editor: "input",
-              headerVertical: true,
-              visible: true,
-              vertAlign: "bottom",
-              cssClass: "facility-entry-column no-right-border",
-              contextMenu: () => this.cellContextMenu(true, true, true),
-            }
-          ]
-        }
-      ];
+            ]
+          },
+          {
+            title: "From Facility",
+            headerHozAlign: "left",
+            vertAlign: "bottom",
+            visible: true,
+            columns: [
+              {
+                title: "Measuring Unit",
+                field: "measuring_unit_facility",
+                minWidth: 80,
+                width: "6%",
+                editor: "list",
+                editorParams: {
+                  values: [
+                    { label: "ng/µl (Concentration)", value: "concentration" },
+                    { label: "M (Cells)", value: "m" },
+                    { label: "Unknown", value: "-" }
+                  ]
+                },
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  const options = {
+                    concentration: "ng/µl (Concentration)",
+                    m: "M (Cells)",
+                    "-": "Unknown"
+                  };
+                  const finalString = options[value] || value || "Select";
+                  return this.ellipsisContainer(finalString);
+                },
+              },
+              {
+                title: "Measured Value",
+                field: "measured_value_facility",
+                minWidth: 60,
+                width: "4%",
+                editor: "number",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
+              },
+              {
+                title: "Volume",
+                field: "sample_volume_facility",
+                minWidth: 60,
+                width: "4%",
+                editor: "number",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
+              },
+              {
+                title: "Size",
+                field: "size_distribution_facility",
+                minWidth: 60,
+                width: "4%",
+                editor: "number",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
+              },
+              {
+                title: "RQN",
+                field: "rna_quality",
+                minWidth: 60,
+                width: "4%",
+                editor: "number",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  let value = Number(cell.getValue());
+                  if (!value) {
+                    return "-";
+                  }
+                  return value.toFixed(1);
+                }
+              },
+              {
+                title: "GMO Documentation",
+                field: "gmo",
+                minWidth: 60,
+                width: "6%",
+                editor: "list",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                editorParams: {
+                  values: [
+                    { label: "Not Needed", value: "false" },
+                    { label: "Risk Assessment Done", value: "true" }
+                  ]
+                },
+                headerFilter: false,
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column",
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  const options = {
+                    false: "Not Needed",
+                    true: "Risk Assessment Done"
+                  };
+                  return options[value] || value || "Select";
+                }
+              },
+              {
+                title: "Comment",
+                field: "comments_facility",
+                minWidth: 100,
+                editor: "input",
+                headerVertical: true,
+                visible: true,
+                vertAlign: "bottom",
+                cssClass: "facility-entry-column no-right-border",
+                contextMenu: () => this.cellContextMenu(true, true, true),
+                formatter: (cell) => {
+                  const value = cell.getValue();
+                  return value || "Empty";
+                }
+              }
+            ]
+          }
+        ];
+      }
     },
     cellContextMenu(allowCopy, allowPaste, allowApplyToAll) {
       const operations = [];
@@ -758,14 +812,31 @@ export default {
     toggleGroups(goToInitial) {
       this.fakeLoading = true;
       const tabulatorElement = this.tabulatorInstance.getTabulatorElement();
-      if (goToInitial === true) {
+      const allGroups = this.tabulatorInstance.getTable().getGroups();
+
+      let closedGroupCount = 0;
+      allGroups.forEach(group => {
+        if (group._group.visible === false) {
+          closedGroupCount++;
+        }
+      });
+
+      if (goToInitial === true || this.groupState === 2) {
         this.tabulatorInstance.getTable().setGroupBy(false);
         this.groupState = 0;
       } else {
-        this.groupState = (this.groupState + 1) % 3;
+        if (closedGroupCount === allGroups.length) {
+          this.tabulatorInstance.getTable().setGroupBy("request_name");
+          this.groupState = 2;
+        } else if (closedGroupCount === 0) {
+          this.tabulatorInstance.getTable().setGroupBy(false);
+          this.groupState = 1;
+        } else {
+          this.tabulatorInstance.getTable().setGroupBy(false);
+          this.groupState = 0;
+        }
       }
 
-      console.log(`Group state: ${this.groupState}`);
       switch (this.groupState) {
         case 0:
           tabulatorElement.classList.remove('no-group-by');
@@ -830,6 +901,8 @@ export default {
           return col;
         });
       }
+
+      localStorage.setItem("columnSettings", JSON.stringify(updatedColumns));
 
       this.columnsList = updatedColumns;
       this.tabulatorInstance.getTable().setColumns(updatedColumns);
@@ -903,7 +976,6 @@ export default {
           });
           break;
       }
-
     },
     setFilters() {
       let filteredData = this.librariesSamplesList.filter((row) => {
@@ -980,7 +1052,12 @@ export default {
         sheetName: "Incoming Libraries & Samples"
       });
 
-      showNotification("Data Exported Successfully.", "failure");
+      showNotification("Data Exported Successfully.", "success");
+    },
+    ellipsisContainer(text) {
+      return `<div title='${text}' style="display: inline-block; overflow:hidden; white-space: nowrap; text-overflow: ellipsis">
+                ${text}
+              </div>`;
     }
   }
 };
