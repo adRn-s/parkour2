@@ -7,7 +7,24 @@
     </div>
     <!-- Header -->
     <div class="header">
-      <h1>Incoming Libraries and Samples</h1>
+      <div class="header-logo" style="display: inline; margin-right: 10px;">
+        <svg style="display: block" fill="none" width="42px" height="42px" version="1.1"
+          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <g>
+            <path opacity="0.3"
+              d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z"
+              fill="#333333" />
+            <path
+              d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z"
+              stroke="white" stroke-width="1.5" />
+            <path d="M14.5 14.5L9 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M10 15H14.6717C14.853 15 15 14.853 15 14.6716V10" stroke="white" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+        </svg>
+      </div>
+      <div class="header-title" style="display: inline;">Incoming Libraries and Samples</div>
+
 
       <!-- Sticky right section for search, advanced filters, and select columns -->
       <div class="sticky-actions">
@@ -22,7 +39,7 @@
               Advanced Filters
             </span>
           </button>
-          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container">
+          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container" style="left: -20px;">
             <label>
               <input type="checkbox" v-model="filters.showLibraries" />
               Show Libraries
@@ -343,9 +360,11 @@ export default {
             width: 36,
           },
           {
+            title: "Select",
             field: "select",
             visible: true,
             headerSort: false,
+            headerVertical: true,
             frozen: true,
             resizable: false,
             formatter: (cell) => {
@@ -406,6 +425,9 @@ export default {
               return name;
             },
             contextMenu: () => this.cellContextMenu(true, false, false),
+            cellDblClick: function (e, cell) {
+              showNotification("This field is not editable.", "warning");
+            },
           },
           {
             title: "Barcode",
@@ -416,11 +438,13 @@ export default {
             frozen: true,
             cssClass: "details-column barcode-column",
             contextMenu: () => this.cellContextMenu(true, false, false),
+            cellDblClick: function (e, cell) {
+              showNotification("This field is not editable.", "warning");
+            },
           },
           {
             title: "From Users",
             headerHozAlign: "left",
-            vertAlign: "bottom",
             visible: true,
             columns: [
               {
@@ -430,13 +454,15 @@ export default {
                 width: "6%",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
                 formatter: (cell) => {
                   const value = cell.getValue();
                   return value || "No Input Type";
-                }
+                },
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               },
               {
                 title: "Protocol",
@@ -445,13 +471,15 @@ export default {
                 width: "6%",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
                 formatter: (cell) => {
                   const value = cell.getValue();
                   return value || "No Protocol";
-                }
+                },
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               },
               {
                 title: "Comment Library/Input",
@@ -459,13 +487,15 @@ export default {
                 minWidth: 100,
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
                 formatter: (cell) => {
                   const value = cell.getValue();
                   return value || "Empty";
-                }
+                },
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               },
               {
                 title: "Input",
@@ -474,9 +504,11 @@ export default {
                 width: "4%",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               },
               {
                 title: "Volume",
@@ -485,7 +517,6 @@ export default {
                 width: "4%",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
                 formatter: (cell) => {
@@ -494,7 +525,10 @@ export default {
                     return "-";
                   }
                   return value.toFixed(1);
-                }
+                },
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               },
               {
                 title: "Size",
@@ -503,7 +537,6 @@ export default {
                 width: "4%",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "user-entry-column",
                 contextMenu: () => this.cellContextMenu(true, false, false),
                 formatter: (cell) => {
@@ -512,14 +545,16 @@ export default {
                     return "-";
                   }
                   return value.toFixed(1);
-                }
+                },
+                cellDblClick: function (e, cell) {
+                  showNotification("This field is not editable.", "warning");
+                },
               }
             ]
           },
           {
             title: "From Facility",
             headerHozAlign: "left",
-            vertAlign: "bottom",
             visible: true,
             columns: [
               {
@@ -537,7 +572,6 @@ export default {
                 },
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -559,7 +593,6 @@ export default {
                 editor: "number",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -578,7 +611,6 @@ export default {
                 editor: "number",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -597,7 +629,6 @@ export default {
                 editor: "number",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -616,7 +647,6 @@ export default {
                 editor: "number",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -643,7 +673,6 @@ export default {
                 headerFilter: false,
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column",
                 formatter: (cell) => {
                   const value = cell.getValue();
@@ -661,7 +690,6 @@ export default {
                 editor: "input",
                 headerVertical: true,
                 visible: true,
-                vertAlign: "bottom",
                 cssClass: "facility-entry-column no-right-border",
                 contextMenu: () => this.cellContextMenu(true, true, true),
                 formatter: (cell) => {
@@ -1055,7 +1083,7 @@ export default {
       showNotification("Data Exported Successfully.", "success");
     },
     ellipsisContainer(text) {
-      return `<div title='${text}' style="display: inline-block; overflow:hidden; white-space: nowrap; text-overflow: ellipsis">
+      return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">
                 ${text}
               </div>`;
     }
@@ -1073,27 +1101,25 @@ export default {
 
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  position: relative;
   width: 100%;
   height: 70px;
   margin-bottom: 10px;
+  padding: 16px 16px 16px 14px;
 }
 
-.header h1 {
-  margin: 0;
+.header-title {
+  width: 100%;
   font-size: 18px;
   color: white;
-  padding-right: 10px;
+  margin-right: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .sticky-actions {
-  position: sticky;
-  top: 0;
   display: flex;
   gap: 10px;
   align-items: center;
@@ -1131,7 +1157,7 @@ export default {
   color: #aaa;
 }
 
-button {
+.header-button {
   display: flex;
   align-items: center;
   padding: 10px 15px;
@@ -1145,18 +1171,17 @@ button {
   transition: background-color 0.3s ease;
 }
 
+.header-button:hover {
+  background-color: #005b59;
+}
 
-button span {
+.header-button span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-button:hover {
-  background-color: #005b59;
-}
-
-button i {
+.header-button i {
   font-size: 16px;
 }
 
@@ -1248,7 +1273,7 @@ input[type="checkbox"]:checked::after {
 }
 
 @media (max-width: 1400px) {
-  .header h1 {
+  .header-title {
     min-width: 80px;
   }
 
@@ -1265,7 +1290,7 @@ input[type="checkbox"]:checked::after {
   }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .search-bar {
     width: 250px;
   }
@@ -1279,8 +1304,8 @@ input[type="checkbox"]:checked::after {
   }
 }
 
-@media (max-width: 600px) {
-  .header h1 {
+@media (max-width: 700px) {
+  .header-title {
     font-size: 16px;
   }
 
@@ -1293,9 +1318,9 @@ input[type="checkbox"]:checked::after {
   }
 }
 
-@media (max-width: 500px) {
-  .header h1 {
-    display: none;
+@media (max-width: 550px) {
+  .header-logo {
+    display: none !important;
   }
 
   .search-bar {

@@ -315,7 +315,7 @@ export default {
   border-bottom: 1px solid grey !important;
 }
 
-.tabulator-col-vertical {
+.tabulator-col-vertical:not(.tabulator-frozen) {
   border-top: 1px solid grey !important;
 }
 

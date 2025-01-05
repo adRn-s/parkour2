@@ -1,89 +1,55 @@
 <template>
   <div class="header">
-    <font-awesome-icon
-      style="font-size: 28px"
-      icon="fa-solid fa-chalkboard-user"
-      size="xl"
-    />
-    <span
-      class="text-large"
-      style="font-size: 20px; font-weight: bold; margin-left: 5px"
-    >
-      Manage Duties</span
-    >
+    <font-awesome-icon style="font-size: 28px" icon="fa-solid fa-chalkboard-user" size="xl" />
+    <span class="text-large" style="font-size: 20px; font-weight: bold; margin-left: 5px">
+      Manage Duties</span>
   </div>
-  <div
-    class="parent-container"
-    style="
+  <div class="parent-container" style="
       padding: 15px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-    "
-  >
+    ">
     <div class="table-container" style="flex: 1; margin-bottom: 20px">
       <div style="margin: 15px; border: 1px solid #006c66">
-        <div
-          style="
+        <div style="
             padding: 7px 15px;
             height: 42px;
             background: #ecebe5;
             display: flex;
             align-items: center;
-          "
-        >
-          <div
-            style="
+          ">
+          <div style="
               display: flex;
               align-items: center;
               flex-grow: 1;
               overflow: hidden;
               white-space: nowrap;
-            "
-          >
-            <div
-              style="
+            ">
+            <div style="
                 background: rgb(105, 105, 105);
                 width: 28px;
                 height: 28px;
                 text-align: center;
-              "
-            >
-              <font-awesome-icon
-                icon="fa-solid fa-magnifying-glass"
-                style="color: white; margin-top: 6px"
-              ></font-awesome-icon>
+              ">
+              <font-awesome-icon icon="fa-solid fa-magnifying-glass"
+                style="color: white; margin-top: 6px"></font-awesome-icon>
             </div>
-            <input
-              id="search-bar"
-              style="outline: none"
-              class="styled-box"
-              type="text"
-              placeholder="Search..."
-              @input="searchDuties"
-            />
+            <input id="search-bar" style="outline: none" class="styled-box" type="text" placeholder="Search..."
+              @input="searchDuties" />
           </div>
 
           <div style="display: flex; align-items: center; margin-left: 10px">
-            <div
-              style="
+            <div style="
                 background: rgb(105, 105, 105);
                 width: 28px;
                 height: 28px;
                 text-align: center;
-              "
-            >
-              <font-awesome-icon
-                icon="fa-regular fa-calendar-days"
-                style="color: white; margin-top: 6px"
-              ></font-awesome-icon>
+              ">
+              <font-awesome-icon icon="fa-regular fa-calendar-days"
+                style="color: white; margin-top: 6px"></font-awesome-icon>
             </div>
-            <select
-              id="period-filter"
-              class="styled-box"
-              style="flex-shrink: 0"
-              v-model="selectedFilter"
-            >
+            <select id="period-filter" class="styled-box" style="flex-shrink: 0" v-model="selectedFilter">
               <option value="all">All</option>
               <option value="ongoing">Ongoing</option>
               <option value="upcoming">Upcoming</option>
@@ -95,43 +61,28 @@
           </div>
         </div>
         <div style="padding: 15px">
-          <ag-grid-vue
-            ref="dutiesGrid"
-            class="ag-theme-alpine"
-            style="height: 723px"
-            rowSelection="multiple"
-            animateRows="true"
-            rowDragManaged="true"
-            stopEditingWhenCellsLoseFocus="true"
-            :columnDefs="columnsList"
-            :rowData="dutiesList"
-            :gridOptions="gridOptions"
-            @cellValueChanged="editDuty"
-            @first-data-rendered="updateGridDataObject"
-          />
+          <ag-grid-vue ref="dutiesGrid" class="ag-theme-alpine" style="height: 723px" rowSelection="multiple"
+            animateRows="true" rowDragManaged="true" stopEditingWhenCellsLoseFocus="true" :columnDefs="columnsList"
+            :rowData="dutiesList" :gridOptions="gridOptions" @cellValueChanged="editDuty"
+            @first-data-rendered="updateGridDataObject" />
         </div>
       </div>
     </div>
-    <div
-      class="add-duty-container"
-      style="
+    <div class="add-duty-container" style="
         margin: 13px;
         background: #ecebe5;
         width: 100%;
         max-width: 320px;
         height: 800px;
         border: 1px solid #006c66;
-      "
-    >
-      <div
-        style="
+      ">
+      <div style="
           background: #006c66;
           padding: 10px;
           color: white;
           margin-bottom: 8px;
           height: 42px;
-        "
-      >
+        ">
         <font-awesome-icon icon="fa-regular fa-calendar-plus" />
         <span class="text-medium" style="margin-left: 4px">Add Duty</span>
       </div>
@@ -140,12 +91,7 @@
           Facility:
         </div>
         <div style="padding-left: 30px">
-          <select
-            class="dropdown-select"
-            name="facility"
-            id="facility"
-            @change="updateDutyObject"
-          >
+          <select class="dropdown-select" name="facility" id="facility" @change="updateDutyObject">
             <option value="">Select</option>
             <option value="Bioinfo">Bioinfo</option>
             <option value="DeepSeq">DeepSeq</option>
@@ -157,13 +103,7 @@
           Responsible Person:
         </div>
         <div style="padding-left: 30px">
-          <select
-            class="dropdown-select"
-            name="main_name"
-            id="main_name"
-            disabled="true"
-            @change="updateDutyObject"
-          >
+          <select class="dropdown-select" name="main_name" id="main_name" disabled="true" @change="updateDutyObject">
             <option value="">Select</option>
             <option v-for="user in userListFiltered" :value="user.id">
               {{ user.first_name }}
@@ -176,13 +116,8 @@
           Backup Person:
         </div>
         <div style="padding-left: 30px">
-          <select
-            class="dropdown-select"
-            name="backup_name"
-            id="backup_name"
-            disabled="true"
-            @change="updateDutyObject"
-          >
+          <select class="dropdown-select" name="backup_name" id="backup_name" disabled="true"
+            @change="updateDutyObject">
             <option value="">Select</option>
             <option v-for="user in userListFiltered" :value="user.id">
               {{ user.first_name }}
@@ -195,16 +130,8 @@
           Start Date:
         </div>
         <div style="padding-left: 30px">
-          <input
-            class="date-selector"
-            type="date"
-            id="start_date"
-            name="start_date"
-            value=""
-            min="2015-01-01"
-            max="2099-12-31"
-            @change="updateDutyObject"
-          />
+          <input class="date-selector" type="date" id="start_date" name="start_date" value="" min="2015-01-01"
+            max="2099-12-31" @change="updateDutyObject" />
         </div>
       </div>
       <div style="padding-top: 6px">
@@ -212,16 +139,8 @@
           End Date:
         </div>
         <div style="padding-left: 30px">
-          <input
-            class="date-selector"
-            type="date"
-            id="end_date"
-            name="end_date"
-            value=""
-            min="2015-01-01"
-            max="2099-12-31"
-            @change="updateDutyObject"
-          />
+          <input class="date-selector" type="date" id="end_date" name="end_date" value="" min="2015-01-01"
+            max="2099-12-31" @change="updateDutyObject" />
         </div>
       </div>
       <div style="padding-top: 6px">
@@ -229,12 +148,7 @@
           Platform:
         </div>
         <div style="padding-left: 30px">
-          <select
-            class="dropdown-select"
-            name="platform"
-            id="platform"
-            @change="updateDutyObject"
-          >
+          <select class="dropdown-select" name="platform" id="platform" @change="updateDutyObject">
             <option value="">Select</option>
             <option value="short">Short</option>
             <option value="long">Long</option>
@@ -247,18 +161,10 @@
           Comments:
         </div>
         <div style="padding-left: 30px; padding-right: 30px">
-          <textarea
-            class="comment-textarea"
-            id="comment"
-            @input="updateDutyObject"
-          />
+          <textarea class="comment-textarea" id="comment" @input="updateDutyObject" />
         </div>
       </div>
-      <button
-        class="text-medium save-button"
-        style="margin: 15px"
-        @click="saveDuty()"
-      >
+      <button class="text-medium save-button" style="margin: 15px" @click="saveDuty()">
         Save
       </button>
     </div>
@@ -306,12 +212,12 @@ export default {
       selectedFilter: "ongoing"
     };
   },
-  setup() {},
+  setup() { },
   beforeMount() {
     this.getUsers();
   },
-  mounted() {},
-  created() {},
+  mounted() { },
+  created() { },
   watch: {
     selectedFilter(value) {
       this.getFilteredDuties(true, value);
@@ -388,8 +294,8 @@ export default {
       try {
         const response = await axiosRef.get(
           urlStringStart +
-            "/api/duties/" +
-            (additionalUrl !== "" ? "?" + additionalUrl : "")
+          "/api/duties/" +
+          (additionalUrl !== "" ? "?" + additionalUrl : "")
         );
         let fetchedRows = [];
         let userList = this.userList;
@@ -433,7 +339,7 @@ export default {
               String(getProp(element, "platform", "-")) === "shortlong"
                 ? "Short + Long"
                 : String(getProp(element, "platform", "-"))[0].toUpperCase() +
-                  String(getProp(element, "platform", "-")).slice(1),
+                String(getProp(element, "platform", "-")).slice(1),
             comment: getProp(element, "comment", "")
           });
         });
@@ -803,7 +709,8 @@ select:disabled {
     max-width: none !important;
     margin: 10px !important;
   }
-  .table-container > div {
+
+  .table-container>div {
     margin: 0px !important;
   }
 }

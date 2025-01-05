@@ -7,8 +7,6 @@ const toast = useToast();
 export function showNotification(content, type) {
   let options = {
     timeout: 3000,
-    toastClassName: "toast-main",
-    bodyClassName: "toast-body",
     position: "top-right",
   };
 
