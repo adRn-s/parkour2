@@ -51,6 +51,8 @@ class BaseSerializer(ModelSerializer):
             "measuring_unit",
             "measured_value",
             "dilution_factor",
+            "volume",
+            "comments",
             "sample_volume_facility",
             "amount_facility",
             "quality_check",

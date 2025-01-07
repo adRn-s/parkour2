@@ -1,10 +1,13 @@
 <template>
   <div class="parent-container">
+
     <!-- Loading overlay -->
     <div v-if="loading || fakeLoading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p v-if="!fakeLoading">Loading Incoming Libraries and Samples...</p>
+      <div v-if="!fakeLoading" class="spinner"></div>
+      <p v-if="!fakeLoading">Loading <span style="font-weight: bold;">Incoming Libraries</span> and <span
+          style="font-weight: bold;">Samples</span>...</p>
     </div>
+
     <!-- Header -->
     <div class="header">
       <div class="header-logo" style="display: inline; margin-right: 10px;">
@@ -25,7 +28,6 @@
       </div>
       <div class="header-title" style="display: inline;">Incoming Libraries and Samples</div>
 
-
       <!-- Sticky right section for search, advanced filters, and select columns -->
       <div class="sticky-actions">
         <div class="search-bar">
@@ -39,14 +41,31 @@
               Advanced Filters
             </span>
           </button>
-          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container" style="left: -20px;">
+          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container"
+            style="width: 250px; left: -50px;">
             <label>
-              <input type="checkbox" v-model="filters.showLibraries" />
-              Show Libraries
+              <div style="display: flex; justify-content: center; text-align: center;">
+                <input type="checkbox" v-model="filters.showLibraries" />
+              </div>
+              <div><span style="font-weight: bold;">Show</span> Libraries</div>
             </label>
             <label>
-              <input type="checkbox" v-model="filters.showSamples" />
-              Show Samples
+              <div style="display: flex; justify-content: center; text-align: center;">
+                <input type="checkbox" v-model="filters.showSamples" />
+              </div>
+              <div><span style="font-weight: bold;">Show</span> Samples</div>
+            </label>
+            <label>
+              <div style="display: flex; justify-content: center; text-align: center;">
+                <input type="checkbox" v-model="filters.onlySamplesSubmitted" />
+              </div>
+              <div><span style="font-weight: bold;">Filter Requests</span> with Samples Submitted</div>
+            </label>
+            <label>
+              <div style="display: flex; justify-content: center; text-align: center;">
+                <input type="checkbox" v-model="filters.onlyGmo" />
+              </div>
+              <div><span style="font-weight: bold;">Filter Requests</span> with GMO ➜ Risk Assessment Done</div>
             </label>
           </div>
         </div>
@@ -63,16 +82,16 @@
               <li v-for="(column, index) in columnsList" :key="index" style="list-style: none;">
                 <template v-if="column.field !== 'select' && column.field !== 'empty-column'">
                   <label
-                    :style="{ backgroundColor: column.columns ? '#faf1d2' : 'white', cursor: column.columns ? 'default' : 'pointer' }">
+                    :style="{ backgroundColor: column.columns ? '#33333310' : 'white', cursor: column.columns ? 'default' : 'pointer' }">
                     <input v-if="!column.columns" type="checkbox" :checked="column.visible"
                       @change="toggleColumnVisibility(column, true)" />
                     <span v-if="column.columns"
                       style="display: flex; align-items: center; justify-content: center; border: 2px solid black; padding: 0; height: 18px; width: 18px; border-radius: 3px; text-align: center; background-color: #45bbff; color: white;">
                       🔽
                     </span>
-                    {{ column.title }}
+                    <span style="font-weight: bold;">{{ column.title }}</span>
                   </label>
-                  <ul v-if="column.columns" style="padding-left: 20px;">
+                  <ul v-if="column.columns" style="padding-left: 15px;">
                     <li v-for="(subColumn, subIndex) in column.columns" :key="subIndex" style="list-style: none;">
                       <label>
                         <input type="checkbox" :checked="subColumn.visible"
@@ -105,15 +124,50 @@
 
     <!-- Main content section with table -->
     <div class="table-container">
-      <div style="margin: 10px">
-        <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="filteredLibrariesSamples"
-          :columnDefs="columnsList" :tableOptions="{ ...tableOptions, onCellValueChanged }" />
+      <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="librariesSamplesList" :columnDefs="columnsList"
+        :tableOptions="{ ...tableOptions, onCellValueChanged }" />
+    </div>
+
+    <!-- Popup window -->
+    <div v-if="showPopupWindow" class="popup-overlay">
+      <div class="popup-container"
+        :style="{ height: popupContents.popupHeight + 'px', width: popupContents.popupWidth + 'px' }">
+        <div class="popup-header">
+          <svg style="display: block" fill="none" width="42px" height="42px" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g>
+              <path opacity="0.3"
+                d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
+                fill="#323232" />
+              <path
+                d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
+                stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 8V13" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M12 16V15.9888" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </g>
+          </svg>
+          <span class="popup-title">{{ popupContents.popupTitle }}</span>
+          <button class="popup-close-button" @click="showPopupWindow = false">&times;</button>
+        </div>
+        <div class="popup-body">
+          <div v-html="popupContents.popupDescription"></div>
+          <div v-if="popupContents.popupList && popupContents.popupList.length > 0" class="popup-scrollable-content">
+            <ol>
+              <li v-for="item in popupContents.popupList" :key="item">
+                {{ item.barcode + " ➜ " }} <span style="font-weight: bold">{{ item.name }}</span></li>
+            </ol>
+          </div>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-button" @click="popupContents.onYes">Yes</button>
+          <button class="popup-button" @click="popupContents.onNo">No</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script lang="jsx">
 import TabulatorTable from "../components/TabulatorTable.vue";
 import {
   showNotification,
@@ -135,24 +189,37 @@ export default {
       loading: true,
       fakeLoading: false,
       librariesSamplesList: [],
-      filteredLibrariesSamples: [],
       columnsList: [],
       groupState: 0,
+      showPopupWindow: false,
+      popupContents: {
+        popupTitle: "Are you sure?",
+        popupDescription: "",
+        popupList: [],
+        onYes: null,
+        onNo: null,
+        popupHeight: 220,
+        popupWidth: 600
+      },
       tableOptions: {
-        index: "pk",
         groupBy: "request_name",
         placeholder: "No Libraries and Samples to show.",
         groupHeader: (value, count, data) => {
+          const samplesSubmitted = data.some(item => item.samples_submitted === true);
+          const gmo = data.some(item => item.gmo === true);
           const totalDepth = data.reduce(
             (sum, row) => sum + (row.sequencing_depth || 0),
             0
           );
+          const biosafetyLevel = [...new Set(data.map(item => item.biosafety_level))]
+            .map(level => level && level.toUpperCase())
+            .join(" and ") || "Unknown";
           return `
   <div style="display: flex; justify-content: space-between; align-items: center;">
 <div style="display: flex; justify-content: space-between; align-items: center;">
-    ${data.sample_submitted ?
+    ${samplesSubmitted ?
               `
-              <div  title="Sample Submitted" style="display: flex; align-items: center;">
+              <div title="Samples Submitted" style="display: flex; align-items: center;">
                 <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.3" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="green"/>
@@ -162,8 +229,29 @@ export default {
                 </svg>
               </div>`
               :
-              `<div  title="Sample not Submitted" style="display: flex; align-items: center;">
-                <svg title="Sample not Submitted" fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
+              `<div title="Samples not Submitted" style="display: flex; align-items: center;">
+                <svg fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path opacity="0.1" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="#323232"/>
+                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
+                </svg>
+              </div>`
+            }
+    ${gmo ?
+              `
+              <div title="GMO: Risk Assessment Done" style="display: flex; align-items: center;">
+                <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path opacity="0.3" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="green"/>
+                    <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 12L10.8189 13.8189V13.8189C10.9189 13.9189 11.0811 13.9189 11.1811 13.8189V13.8189L15 10" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
+                </svg>
+              </div>`
+              :
+              `<div title="GMO: Not Needed" style="display: flex; align-items: center;">
+                <svg fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.1" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="#323232"/>
                     <path d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" stroke="#323232" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -174,7 +262,7 @@ export default {
   <div>
     <span style="font-weight: bold; font-size: 14px;">${value}</span>
     <span style="font-weight: normal; font-size: 12px;">
-      (${count} item${count > 1 ? "s" : ""}, Total Depth: ${totalDepth}M)
+      (#: ${count}, Total Depth: ${totalDepth}M, ${biosafetyLevel})
     </span>
   </div>
 </div>
@@ -198,7 +286,7 @@ export default {
           </g>
         </svg>
       </div>
-      <div title="Mark Request as Sample Submitted" class="group-action-button" onclick="handleGroupButtonClick(event, '${value}', 'sampleSubmitted')">
+      <div title="Mark Request as Samples Submitted/Not Submitted" class="group-action-button" onclick="handleGroupButtonClick(event, '${value}', 'samplesSubmitted')">
         <svg fill="none" width="24px" height="24px"version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g>
             <path opacity="0.5" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="white"/>
@@ -242,18 +330,19 @@ export default {
         },
         initialSort: [{ column: "name", dir: "asc" }],
       },
-      showAdvancedFilters: false,
+      searchQuery: "",
       filters: {
         showLibraries: true,
-        showSamples: true
+        showSamples: true,
+        onlySamplesSubmitted: false,
+        onlyGmo: false,
       },
-      searchQuery: "",
+      showAdvancedFilters: false,
       showSelectColumns: false,
       libraryProtocols: []
     };
   },
   mounted() {
-    // this.getLibraryProtocols();
     this.getLibrariesSamples();
     this.setColumns();
 
@@ -267,17 +356,29 @@ export default {
     document.removeEventListener("click", this.handleOutsideClick);
   },
   watch: {
-    searchQuery() {
-      this.onSearch();
+    searchQuery(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.tabulatorInstance.filterTableData("search", newValue === null ? "" : newValue);
+      }
     },
     "filters.showLibraries"(newValue, oldValue) {
       if (newValue !== oldValue) {
-        this.setFilters();
+        this.tabulatorInstance.filterTableData("showLibraries", newValue);
       }
     },
     "filters.showSamples"(newValue, oldValue) {
       if (newValue !== oldValue) {
-        this.setFilters();
+        this.tabulatorInstance.filterTableData("showSamples", newValue);
+      }
+    },
+    "filters.onlySamplesSubmitted"(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.tabulatorInstance.filterTableData("onlySamplesSubmitted", newValue);
+      }
+    },
+    "filters.onlyGmo"(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.tabulatorInstance.filterTableData("onlyGmo", newValue);
       }
     }
   },
@@ -289,18 +390,19 @@ export default {
           urlStringStart + "/api/incoming_libraries/"
         );
         let fetchedRows = response.data.map((element) => ({
-          pk: element.pk,
-          record_type: element.record_type,
-          request_id: element.request,
-          request_name: element.request_name,
-          name: element.name,
-          type: element.barcode[2],
-          barcode: element.barcode,
-          sample_submitted: element.sample_submitted,
-          nucleic_acid_type_name: element.nucleic_acid_type_name,
-          library_protocol_name: element.library_protocol_name,
-          measuring_unit: element.measuring_unit,
-          measured_value: element.measured_value,
+          pk: element.pk || "",
+          record_type: element.record_type || "",
+          request_id: element.request || "",
+          request_name: element.request_name || "",
+          name: element.name || "",
+          type: element.barcode[2] || "",
+          barcode: element.barcode || "",
+          samples_submitted: element.samples_submitted || "",
+          nucleic_acid_type_name: element.nucleic_acid_type_name || "",
+          library_protocol_name: element.library_protocol_name || "",
+          biosafety_level: element.biosafety_level || "",
+          measuring_unit: element.measuring_unit || "",
+          measured_value: element.measured_value || "",
           input:
             element.measuring_unit === "concentration"
               ? `${String(element.measured_value || "")} ng/µl`
@@ -308,464 +410,411 @@ export default {
                 ? `${String(element.measured_value || "")} M`
                 : element.measuring_unit !== "-"
                   ? `${String(element.measured_value || "")} ${String(
-                    element.measuring_unit
+                    element.measuring_unit || ""
                   )}`
                   : `${String(element.measured_value || "")}`,
-          volume: element.volume,
-          mean_fragment_size: element.mean_fragment_size,
-          comments: element.comments,
-          measuring_unit_facility: element.measuring_unit_facility,
-          measured_value_facility: element.measured_value_facility,
-          sample_volume_facility: element.sample_volume_facility,
-          size_distribution_facility: element.size_distribution_facility,
-          rna_quality: element.rna_quality,
-          gmo: element.gmo,
-          comments_facility: element.comments_facility
+          volume: element.volume || "",
+          mean_fragment_size: element.mean_fragment_size || "",
+          comments: element.comments || "",
+          measuring_unit_facility: element.measuring_unit_facility || "",
+          measured_value_facility: element.measured_value_facility || "",
+          sample_volume_facility: element.sample_volume_facility || "",
+          size_distribution_facility: element.size_distribution_facility || "",
+          sequencing_depth: element.sequencing_depth || "",
+          rna_quality: element.rna_quality || "",
+          gmo: element.gmo || "",
+          comments_facility: element.comments_facility || "",
         }));
         this.librariesSamplesList = fetchedRows;
-        this.filteredLibrariesSamples = fetchedRows;
       } catch (error) {
         handleError(error);
       } finally {
         this.loading = false;
       }
     },
-    async getLibraryProtocols() {
-      try {
-        let response = await axiosRef.get(
-          urlStringStart + "/api/library_protocols/"
-        );
-        let fetchedRows = response.data;
-        this.libraryProtocols = fetchedRows;
-      } catch (error) {
-        handleError(error);
-      } finally {
-      }
-    },
     setColumns() {
       const storedColumnState = JSON.parse(localStorage.getItem("columnSettings"));
 
-      if (false) {
-        this.columnsList = storedColumnState;
-      }
-      else {
-        this.columnsList = [
-          {
-            field: "empty-column",
-            cssClass: "empty-column",
-            visible: false,
-            headerSort: false,
-            frozen: true,
-            resizable: false,
-            width: 36,
-          },
-          {
-            title: "Select",
-            field: "select",
-            visible: true,
-            headerSort: false,
-            headerVertical: true,
-            frozen: true,
-            resizable: false,
-            formatter: (cell) => {
-              const row = cell.getRow();
-              const rowData = row.getData();
-              const checkbox = `<input type="checkbox" title="Select" style="top:-4px" ${rowData.selected ? "checked" : ""
-                } />`;
+      let columnList = [
+        {
+          field: "empty-column",
+          cssClass: "empty-column",
+          visible: false,
+          headerSort: false,
+          frozen: true,
+          resizable: false,
+          width: 36,
+        },
+        {
+          title: "Select",
+          field: "select",
+          visible: true,
+          headerSort: false,
+          headerVertical: true,
+          frozen: true,
+          resizable: false,
+          formatter: (cell) => {
+            const row = cell.getRow();
+            const rowData = row.getData();
+            const checkbox = `<input type="checkbox" title="Select" style="top:-4px" ${rowData.selected ? "checked" : ""
+              } />`;
 
-              return checkbox;
-            },
-            hozAlign: "center",
-            width: 36,
-            cssClass: "checkbox-column",
-            contextMenu: () => this.cellContextMenu(false, false, false),
-            cellClick: function (e, cell) {
-              const clickedRow = cell.getRow();
-              const rowData = clickedRow.getData();
-              const checkbox = e.target;
-              rowData.selected = checkbox.checked;
-            },
+            return checkbox;
           },
-          {
-            title: "Name",
-            field: "name",
-            minWidth: 220,
-            headerFilter: true,
-            visible: true,
-            frozen: true,
-            cssClass: "details-column name-column",
-            contextMenu: () => this.cellContextMenu(true, false, false),
-            formatter: (cell) => {
-              const barcode = cell.getRow().getData().barcode;
-              const name = cell.getValue();
-              if (barcode && barcode.length > 2) {
-                const tag = barcode[2];
-                if (tag === "L" || tag === "S") {
-                  const bgColor = tag === "S" ? "#00800080" : "lightblue";
-                  return `
-                        <div style="display: flex; align-items: center;">
-                          <span style="
-                            display: inline-block;
-                            background-color: ${bgColor};
-                            color: white;
-                            font-size: 10px;
-                            font-weight: bold;
-                            padding: 2px 4px;
-                            border: 2px solid #333;
-                            border-radius: 4px;
-                            margin-right: 8px;
-                          ">
-                            ${tag}
+          hozAlign: "center",
+          width: 36,
+          cssClass: "checkbox-column",
+          contextMenu: () => this.cellContextMenu(false, false, false),
+          cellClick: function (e, cell) {
+            const clickedRow = cell.getRow();
+            const rowData = clickedRow.getData();
+            const checkbox = e.target;
+            rowData.selected = checkbox.checked;
+          },
+        },
+        {
+          title: "Name",
+          field: "name",
+          minWidth: 220,
+          headerFilter: true,
+          visible: true,
+          frozen: true,
+          cssClass: "details-column name-column",
+          contextMenu: () => this.cellContextMenu(true, false, false),
+          formatter: (cell) => {
+            const type = cell.getRow().getData().type;
+            const name = cell.getValue();
+            const bgColor = type === "S" ? "#00800080" : "lightblue";
+            return `
+                        <div style="padding: 4px 8px; display: flex; align-items: center;">
+                          <span title="${type === "S" ? "Sample" : "Library"}" 
+                            style="
+                              display: inline-block;
+                              background-color: ${bgColor};
+                              color: white;
+                              font-size: 10px;
+                              font-weight: bold;
+                              padding: 2px 4px;
+                              border: 2px solid #333;
+                              border-radius: 4px;
+                              margin-right: 8px;
+                            ">
+                            ${type}
                           </span>
-                          <span style="font-weight:bold;">${name}</span>
+                          <span title="${name}" style="padding: 8px 0px; font-weight:bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${name}</span>
                         </div>
                       `;
-                }
+          },
+          contextMenu: () => this.cellContextMenu(true, false, false),
+          cellDblClick: function (e, cell) {
+            showNotification("Um, This field is not editable.", "warning");
+          },
+        },
+        {
+          title: "Barcode",
+          field: "barcode",
+          width: 98,
+          headerFilter: true,
+          visible: true,
+          frozen: true,
+          cssClass: "details-column barcode-column",
+          contextMenu: () => this.cellContextMenu(true, false, false),
+          cellDblClick: function (e, cell) {
+            showNotification("Um, This field is not editable.", "warning");
+          },
+          formatter: (cell) => {
+            const value = cell.getValue();
+            const finalString = value || "-";
+            return this.ellipsisContainer(finalString, true);
+          },
+        },
+        {
+          title: "From Users",
+          headerHozAlign: "left",
+          visible: true,
+          columns: [
+            {
+              title: "Input Type",
+              field: "nucleic_acid_type_name",
+              minWidth: 80,
+              width: "6%",
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              formatter: (cell) => {
+                const value = cell.getValue();
+                const finalString = value || "No Input Type";
+                return this.ellipsisContainer(finalString);
+              },
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
+              },
+            },
+            {
+              title: "Protocol",
+              field: "library_protocol_name",
+              minWidth: 80,
+              width: "6%",
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              formatter: (cell) => {
+                const value = cell.getValue();
+                const finalString = value || "No Protocol";
+                return this.ellipsisContainer(finalString);
+              },
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
+              },
+            },
+            {
+              title: "Comment Library/Input",
+              field: "comments",
+              minWidth: 100,
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              formatter: (cell) => {
+                const finalString = cell.getValue() || "Empty";
+                return this.ellipsisContainer(finalString);
+              },
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
+              },
+            },
+            {
+              title: "Input",
+              field: "input",
+              minWidth: 60,
+              width: "4%",
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
+              },
+              formatter: (cell) => {
+                const value = cell.getValue();
+                return this.ellipsisContainer(value);
               }
-              return name;
             },
-            contextMenu: () => this.cellContextMenu(true, false, false),
-            cellDblClick: function (e, cell) {
-              showNotification("This field is not editable.", "warning");
+            {
+              title: "Volume",
+              field: "volume",
+              minWidth: 60,
+              width: "4%",
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
+              },
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
+              },
             },
-          },
-          {
-            title: "Barcode",
-            field: "barcode",
-            width: 98,
-            headerFilter: true,
-            visible: true,
-            frozen: true,
-            cssClass: "details-column barcode-column",
-            contextMenu: () => this.cellContextMenu(true, false, false),
-            cellDblClick: function (e, cell) {
-              showNotification("This field is not editable.", "warning");
-            },
-          },
-          {
-            title: "From Users",
-            headerHozAlign: "left",
-            visible: true,
-            columns: [
-              {
-                title: "Input Type",
-                field: "nucleic_acid_type_name",
-                minWidth: 80,
-                width: "6%",
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  return value || "No Input Type";
-                },
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
+            {
+              title: "Size",
+              field: "mean_fragment_size",
+              minWidth: 60,
+              width: "4%",
+              headerVertical: true,
+              visible: true,
+              cssClass: "user-entry-column",
+              contextMenu: () => this.cellContextMenu(true, false, false),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
               },
-              {
-                title: "Protocol",
-                field: "library_protocol_name",
-                minWidth: 80,
-                width: "6%",
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  return value || "No Protocol";
-                },
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
+              cellDblClick: function (e, cell) {
+                showNotification("Um, This field is not editable.", "warning");
               },
-              {
-                title: "Comment Library/Input",
-                field: "comments",
-                minWidth: 100,
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  return value || "Empty";
-                },
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
-              },
-              {
-                title: "Input",
-                field: "input",
-                minWidth: 60,
-                width: "4%",
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
-              },
-              {
-                title: "Volume",
-                field: "volume",
-                minWidth: 60,
-                width: "4%",
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
-                },
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
-              },
-              {
-                title: "Size",
-                field: "mean_fragment_size",
-                minWidth: 60,
-                width: "4%",
-                headerVertical: true,
-                visible: true,
-                cssClass: "user-entry-column",
-                contextMenu: () => this.cellContextMenu(true, false, false),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
-                },
-                cellDblClick: function (e, cell) {
-                  showNotification("This field is not editable.", "warning");
-                },
-              }
-            ]
-          },
-          {
-            title: "From Facility",
-            headerHozAlign: "left",
-            visible: true,
-            columns: [
-              {
-                title: "Measuring Unit",
-                field: "measuring_unit_facility",
-                minWidth: 80,
-                width: "6%",
-                editor: "list",
-                editorParams: {
-                  values: [
-                    { label: "ng/µl (Concentration)", value: "concentration" },
-                    { label: "M (Cells)", value: "m" },
-                    { label: "Unknown", value: "-" }
-                  ]
-                },
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  const options = {
-                    concentration: "ng/µl (Concentration)",
-                    m: "M (Cells)",
-                    "-": "Unknown"
+            }
+          ]
+        },
+        {
+          title: "From Facility",
+          headerHozAlign: "left",
+          visible: true,
+          columns: [
+            {
+              title: "Measuring Unit",
+              field: "measuring_unit_facility",
+              minWidth: 80,
+              width: "6%",
+              editor: "list",
+              editorParams: (cell) => {
+                const row = cell.getRow().getData();
+                const options = [
+                  { label: "ng/µl (Concentration)", value: "concentration" },
+                  { label: "M (Cells)", value: "m" },
+                  { label: "Unknown", value: "-" }
+                ];
+                if (row.type === "L") {
+                  return {
+                    values: options.filter(option => option.value !== "m")
                   };
-                  const finalString = options[value] || value || "Select";
-                  return this.ellipsisContainer(finalString);
-                },
-              },
-              {
-                title: "Measured Value",
-                field: "measured_value_facility",
-                minWidth: 60,
-                width: "4%",
-                editor: "number",
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
                 }
+                return { values: options };
               },
-              {
-                title: "Volume",
-                field: "sample_volume_facility",
-                minWidth: 60,
-                width: "4%",
-                editor: "number",
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
-                }
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = cell.getValue();
+                const options = {
+                  concentration: "ng/µl (Concentration)",
+                  m: "M (Cells)",
+                  "-": "Unknown"
+                };
+                const finalString = options[value] || value || "Select";
+                return this.ellipsisContainer(finalString);
               },
-              {
-                title: "Size",
-                field: "size_distribution_facility",
-                minWidth: 60,
-                width: "4%",
-                editor: "number",
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
-                }
-              },
-              {
-                title: "RQN",
-                field: "rna_quality",
-                minWidth: 60,
-                width: "4%",
-                editor: "number",
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  let value = Number(cell.getValue());
-                  if (!value) {
-                    return "-";
-                  }
-                  return value.toFixed(1);
-                }
-              },
-              {
-                title: "GMO Documentation",
-                field: "gmo",
-                minWidth: 60,
-                width: "6%",
-                editor: "list",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                editorParams: {
-                  values: [
-                    { label: "Not Needed", value: "false" },
-                    { label: "Risk Assessment Done", value: "true" }
-                  ]
-                },
-                headerFilter: false,
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column",
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  const options = {
-                    false: "Not Needed",
-                    true: "Risk Assessment Done"
-                  };
-                  return options[value] || value || "Select";
-                }
-              },
-              {
-                title: "Comment",
-                field: "comments_facility",
-                minWidth: 100,
-                editor: "input",
-                headerVertical: true,
-                visible: true,
-                cssClass: "facility-entry-column no-right-border",
-                contextMenu: () => this.cellContextMenu(true, true, true),
-                formatter: (cell) => {
-                  const value = cell.getValue();
-                  return value || "Empty";
-                }
+            },
+            {
+              title: "Measured Value",
+              field: "measured_value_facility",
+              minWidth: 60,
+              width: "4%",
+              editor: "number",
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
               }
-            ]
+            },
+            {
+              title: "Volume",
+              field: "sample_volume_facility",
+              minWidth: 60,
+              width: "4%",
+              editor: "number",
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
+              }
+            },
+            {
+              title: "Size",
+              field: "size_distribution_facility",
+              minWidth: 60,
+              width: "4%",
+              editor: "number",
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
+              }
+            },
+            {
+              title: "RQN",
+              field: "rna_quality",
+              minWidth: 60,
+              width: "4%",
+              editor: "number",
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = Number(cell.getValue());
+                const finalString = value ? value.toFixed(1) : "-";
+                return this.ellipsisContainer(finalString);
+              }
+            },
+            {
+              title: "GMO Documentation",
+              field: "gmo",
+              minWidth: 60,
+              width: "6%",
+              editor: "list",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              editorParams: {
+                values: [
+                  { label: "Not Needed", value: "false" },
+                  { label: "Risk Assessment Done", value: "true" }
+                ]
+              },
+              headerFilter: false,
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column",
+              formatter: (cell) => {
+                const value = cell.getValue();
+                const options = {
+                  false: "Not Needed",
+                  true: "Risk Assessment Done"
+                };
+                const finalString = options[value] || value || "Select";
+                return this.ellipsisContainer(finalString);
+              }
+            },
+            {
+              title: "Comment",
+              field: "comments_facility",
+              minWidth: 100,
+              editor: "input",
+              headerVertical: true,
+              visible: true,
+              cssClass: "facility-entry-column no-right-border",
+              contextMenu: () => this.cellContextMenu(true, true, true),
+              formatter: (cell) => {
+                const value = cell.getValue() || "Empty";
+                return this.ellipsisContainer(value);
+              }
+            }
+          ]
+        }
+      ];
+
+      if (storedColumnState) {
+        storedColumnState.forEach((column, index) => {
+          columnList[index].visible = column.visible;
+          if (column.columns) {
+            column.columns.forEach((subColumn, subIndex) => {
+              columnList[index].columns[subIndex].visible = subColumn.visible;
+            })
           }
-        ];
+        })
       }
+
+      this.columnsList = columnList;
     },
     cellContextMenu(allowCopy, allowPaste, allowApplyToAll) {
       const operations = [];
       let isRangeSelected = false;
-      let selectedRanges = this.tabulatorInstance.getTable().getRangesData();
-      if (selectedRanges.length > 0) {
-        let firstRangeFields = Object.keys(selectedRanges[0][0]);
-        isRangeSelected = selectedRanges[0].length > 1 || firstRangeFields.length > 1;
+      let selectedRanges = this.tabulatorInstance.getTable().getRanges();
+      let selectedRangesData = this.tabulatorInstance.getTable().getRangesData();
+      let firstRangeCells = selectedRanges[0] ? selectedRanges[0].getCells() : [];
+      if (selectedRangesData.length > 0) {
+        let firstRangeFields = Object.keys(selectedRangesData[0][0]);
+        isRangeSelected = selectedRangesData[0].length > 1 || firstRangeFields.length > 1;
       }
+
       if (isRangeSelected) {
-        if (allowCopy)
-          operations.push({
-            label: "Copy Range",
-            action: () => {
-              const rangeText = selectedRanges[0]
-                .map(row =>
-                  Object.values(row).join("\t")
-                )
-                .join("\n");
-
-              navigator.clipboard.writeText(rangeText).then(() => {
-                showNotification("Range copied to clipboard.", "success");
-              }).catch(err => {
-                showNotification("Failed to copy range.", "error");
-              });
-            },
-          });
-
-        if (allowPaste)
-          operations.push({
-            label: "Paste Range",
-            action: () => {
-              const ranges = this.tabulatorInstance.getTable().getRanges();
-
-              if (!ranges || ranges.length === 0) {
-                console.warn("No valid range selected for pasting.");
-                return;
-              }
-              const parsedRows = [];
-
-              navigator.clipboard.readText().then((text) => {
-                parsedRows.push(text.split("\n").map(row => row.split("\t")));
-                console.log(parsedRows);
-                console.log(ranges);
-
-                ranges.forEach((range, rangeIndex) => {
-                  const startRow = range._range.start.row;
-                  const startColumn = range._range.start.col;
-
-                  parsedRows.forEach((rowData, rowIndex) => {
-                    const targetRow = this.tabulatorInstance.getTable().getRowFromPosition(startRow.index + rowIndex);
-
-                    if (targetRow) {
-                      rowData.forEach((cellData, colIndex) => {
-                        const targetCell = targetRow.getCell(startColumn.field);
-                        if (targetCell) {
-                          targetCell.setValue(cellData);
-                        }
-                      });
-                    }
-                  });
-                });
-              });
-            },
-          });
+        showNotification("Please use Ctrl+C to copy, and Ctrl+V to paste in a range selection.", "info");
       } else {
         if (allowCopy) {
           operations.push({
@@ -893,7 +942,7 @@ export default {
       }
       setTimeout(() => {
         this.fakeLoading = false;
-      }, 200);
+      }, 300);
     },
     toggleAdvancedFilters() {
       this.showAdvancedFilters = !this.showAdvancedFilters;
@@ -908,16 +957,24 @@ export default {
       }
     },
     toggleColumnVisibility(column, isMainColumn) {
+      this.toggleGroups(true);
       let updatedColumns;
 
       if (isMainColumn) {
-        updatedColumns = this.columnsList.map((col) => ({
-          ...col,
-          visible: col === column ? !col.visible : col.visible,
-        }));
+        updatedColumns = this.columnsList.map((col) => {
+          if (col.field === "select")
+            return col;
+          else
+            return {
+              ...col,
+              visible: col === column ? !col.visible : col.visible,
+            }
+        });
       } else {
         updatedColumns = this.columnsList.map((col) => {
-          if (col.columns) {
+          if (col.field === "select")
+            return col;
+          else if (col.columns) {
             return {
               ...col,
               columns: col.columns.map((subCol) => ({
@@ -926,30 +983,33 @@ export default {
               })),
             };
           }
-          return col;
+          else
+            return col;
         });
       }
 
       localStorage.setItem("columnSettings", JSON.stringify(updatedColumns));
-
       this.columnsList = updatedColumns;
-      this.tabulatorInstance.getTable().setColumns(updatedColumns);
     },
     handleGroupButtonClick(event, groupValue, action) {
-      console.log(`Action: ${action} for group: ${groupValue}`);
       event.stopPropagation();
 
       const group = this.tabulatorInstance
         .getTable()
         .getGroups()
         .find((g) => g.getKey() === groupValue);
-      if (!group) return;
-
-      const rows = group.getRows();
+      const groupRows = group.getRows();
+      const groupElement = group.getElement();
+      const selectedRows = groupRows.filter(row => row.getData().selected);
+      const type = selectedRows[0] && selectedRows[0].getData().type;
+      const requestId = groupRows[0].getData().request_id;
+      const requestName = group._group.key;
+      const selectedNamesList = selectedRows.map(item => { return ({ barcode: item.getData().barcode, name: item.getData().name }) });
+      const popupHeight = Math.min(420, 260 + selectedNamesList.length * 22);
 
       switch (action) {
         case "selectAll":
-          rows.forEach((row) => {
+          groupRows.forEach((row) => {
             row.getData().selected = true;
             row.update({});
             const rowElement = row.getElement();
@@ -958,11 +1018,12 @@ export default {
               checkbox.checked = true;
             }
           });
-          this.tabulatorInstance.showAllGroups();
+          if (!group._group.visible)
+            groupElement.click();
           break;
 
         case "deselectAll":
-          rows.forEach((row) => {
+          groupRows.forEach((row) => {
             row.getData().selected = false;
             row.update({});
             const rowElement = row.getElement();
@@ -971,101 +1032,140 @@ export default {
               checkbox.checked = false;
             }
           });
-          this.tabulatorInstance.showAllGroups();
+          if (!group._group.visible)
+            groupElement.click();
           break;
 
-        case "sampleSubmitted":
+        case "samplesSubmitted":
+          let newSamplesSubmittedState = groupRows[0].getData().samples_submitted
+            ? !groupRows[0].getData().samples_submitted
+            : true;
+          let popupTitleSS = "Are you sure?";
+          let popupDescriptionSS = `Marking the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">${newSamplesSubmittedState === true ? "Samples Submitted" : "Samples Not Submitted"}</span>, Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let onYesSS = () => {
+            try {
+              const payload = {
+                data: JSON.stringify({
+                  result: newSamplesSubmittedState,
+                })
+              };
+              const url = `${urlStringStart}/api/requests/${requestId}/samples_submitted/`;
+              axiosRef.post(url, payload);
+              showNotification("Request successfully marked as 'Samples Submitted'.", "success");
+              groupRows.forEach((row) => {
+                let rowData = row.getData();
+                rowData.samples_submitted = rowData.samples_submitted
+                  ? !rowData.samples_submitted
+                  : true;
+                row.update(rowData);
+              });
+              this.tabulatorInstance.getTable().setGroupBy("request_name")
+            } catch (error) {
+              handleError(error);
+            }
+            this.showPopupWindow = false;
+          };
+          let onNoSS = () => {
+            this.showPopupWindow = false;
+          };
+          this.createPopupWindow(popupTitleSS, popupDescriptionSS, [], onYesSS, onNoSS, 220, 600);
           break;
 
         case "qualityPassed":
-          rows.forEach((row) => {
-            if (row.getData().selected) {
-              console.log(`Marked ${row.getData().name} as Passed`);
-              row.update({ qualityCheck: "Passed" });
-            }
-          });
+          if (selectedRows.length === 0) {
+            showNotification("Please select libraries/samples in the request first.", "warning")
+            break;
+          }
+          let popupTitleQP = `Are you sure?`;
+          let popupDescriptionQP = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Passed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupListQP = [...selectedNamesList];
+          let onYesQP = () => {
+            this.qualityCheckChange(selectedRows, "passed");
+            this.showPopupWindow = false;
+          };
+          let onNoQP = () => {
+            this.showPopupWindow = false;
+          };
+          this.createPopupWindow(popupTitleQP, popupDescriptionQP, popupListQP, onYesQP, onNoQP, popupHeight, 700);
           break;
 
         case "qualityCompromised":
-          rows.forEach((row) => {
-            if (row.getData().selected) {
-              console.log(`Marked ${row.getData().name} as Compromised`);
-              row.update({ qualityCheck: "Compromised" });
-            }
-          });
+          if (selectedRows.length === 0) {
+            showNotification("Please select libraries/samples in the request first.", "warning")
+            break;
+          }
+          let popupTitleQC = `Are you sure?`;
+          let popupDescriptionQC = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Compromised</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupListQC = [...selectedNamesList];
+          let onYesQC = () => {
+            this.qualityCheckChange(selectedRows, "compromised");
+            this.showPopupWindow = false;
+          };
+          let onNoQC = () => {
+            this.showPopupWindow = false;
+          };
+          this.createPopupWindow(popupTitleQC, popupDescriptionQC, popupListQC, onYesQC, onNoQC, popupHeight, 700);
           break;
 
         case "qualityFailed":
-          rows.forEach((row) => {
-            if (row.getData().selected) {
-              console.log(`Marked ${row.getData().name} as Failed`);
-              row.update({ qualityCheck: "Failed" });
-            }
-          });
+          if (selectedRows.length === 0) {
+            showNotification("Please select libraries/samples in the request first.", "warning")
+            break;
+          }
+          let popupTitleQF = `Are you sure?`;
+          let popupDescriptionQF = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Failed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupListQF = [...selectedNamesList];
+          let onYesQF = () => {
+            this.qualityCheckChange(selectedRows, "failed");
+            this.showPopupWindow = false;
+          };
+          let onNoQF = () => {
+            this.showPopupWindow = false;
+          };
+          this.createPopupWindow(popupTitleQF, popupDescriptionQF, popupListQF, onYesQF, onNoQF, popupHeight, 700);
           break;
       }
     },
-    setFilters() {
-      let filteredData = this.librariesSamplesList.filter((row) => {
-        if (!this.filters.showLibraries && row.type === "L") return false;
-        if (!this.filters.showSamples && row.type === "S") return false;
-        return true;
-      });
-
-      this.filteredLibrariesSamples = filteredData;
-    },
-    onSearch() {
-      let lowercasedQuery = this.searchQuery.toLowerCase();
-      let filteredData = [];
-
-      if (lowercasedQuery.trim() === "") {
-        filteredData = [...this.librariesSamplesList];
-      } else {
-        filteredData = [...this.librariesSamplesList].filter((row) => {
-          return (
-            (row.request_name && row.request_name.toLowerCase().includes(lowercasedQuery)) ||
-            (row.name && row.name.toLowerCase().includes(lowercasedQuery)) ||
-            (row.barcode &&
-              row.barcode.toLowerCase().includes(lowercasedQuery)) ||
-            (row.nucleic_acid_type_name &&
-              row.nucleic_acid_type_name
-                .toLowerCase()
-                .includes(lowercasedQuery)) ||
-            (row.library_protocol_name &&
-              row.library_protocol_name
-                .toLowerCase()
-                .includes(lowercasedQuery)) ||
-            (row.comments &&
-              row.comments.toLowerCase().includes(lowercasedQuery))
-          );
-        });
-      }
-      this.filteredLibrariesSamples = filteredData;
-      this.$nextTick(() => {
-        this.$refs.searchInput.focus();
-      });
-    },
     async onCellValueChanged(rowData, updatedData) {
+      if (updatedData.field === "gmo") {
+        this.tabulatorInstance.getTable().setGroupBy("request_name");
+      }
       try {
         const payload = {
-          data: [
+          data: JSON.stringify([
             {
               pk: rowData.pk,
               record_type: rowData.record_type,
-              [updatedData.field]: updatedData.value
-            }
-          ]
+              [updatedData.field]: updatedData.value,
+            },
+          ]),
         };
 
-        await axiosRef.post(
-          `${urlStringStart}/api/incoming_libraries/edit/`,
-          JSON.stringify(payload)
-        );
-        showNotification("Record updated successfully.", "success");
+        await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
+        showNotification("Data updated successfully.", "success");
       } catch (error) {
-        console.log(error);
         handleError(error);
       }
+    },
+    qualityCheckChange(groupRows, qualityCheck) {
+      const payload = {
+        data: JSON.stringify(
+          groupRows.map(row => ({
+            pk: row.getData().pk,
+            record_type: row.getData().record_type,
+            quality_check: qualityCheck,
+          }))
+        )
+      };
+      axiosRef
+        .post(`${urlStringStart}/api/incoming_libraries/edit/`, payload)
+        .then(() => {
+          showNotification("Quality check status updated successfully", "success");
+          this.getLibrariesSamples();
+        })
+        .catch((error) => {
+          handleError(error);
+        });
     },
     exportToExcel() {
       const today = new Date();
@@ -1075,17 +1175,30 @@ export default {
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
-      this.toggleGroups(true);
+      if (this.groupState !== 2)
+        this.toggleGroups(true);
       this.tabulatorInstance.getTable().download("xlsx", filename, {
         sheetName: "Incoming Libraries & Samples"
       });
 
-      showNotification("Data Exported Successfully.", "success");
+      showNotification("Data successfully exported!", "success");
     },
-    ellipsisContainer(text) {
-      return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">
+    ellipsisContainer(text, boldText) {
+      return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 12px 8px 12px 12px; font-weight: ${boldText === true ? "bold" : "normal"}">
                 ${text}
               </div>`;
+    },
+    createPopupWindow(popupTitle, popupDescription, popupList, onYes, onNo, popupHeight, popupWidth) {
+      this.popupContents.popupTitle = popupTitle;
+      this.popupContents.popupDescription = popupDescription;
+      this.popupContents.popupList = popupList;
+      this.popupContents.onYes = onYes;
+      this.popupContents.onNo = onNo;
+      if (popupWidth && popupHeight) {
+        this.popupContents.popupHeight = popupHeight;
+        this.popupContents.popupWidth = popupWidth;
+      }
+      this.showPopupWindow = true;
     }
   }
 };
@@ -1099,167 +1212,12 @@ export default {
   padding: 10px;
 }
 
-.header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-  height: 70px;
-  margin-bottom: 10px;
-  padding: 16px 16px 16px 14px;
-}
-
-.header-title {
-  width: 100%;
-  font-size: 18px;
-  color: white;
-  margin-right: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sticky-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  z-index: 10;
-  padding: 10px 0;
-}
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-  width: 550px;
-}
-
-.search-bar input {
-  border: none;
-  outline: none;
-  color: #555;
-  padding: 10px;
-  font-size: 14px;
-  flex-grow: 1;
-  background: none;
-}
-
-.search-bar input::placeholder {
-  color: #888;
-}
-
-.search-bar i {
-  cursor: pointer;
-  font-size: 16px;
-  color: #aaa;
-}
-
-.header-button {
-  display: flex;
-  align-items: center;
-  padding: 10px 15px;
-  font-size: 14px;
-  background-color: #006c66;
-  border: 1px solid white;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  gap: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.header-button:hover {
-  background-color: #005b59;
-}
-
-.header-button span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header-button i {
-  font-size: 16px;
-}
-
-.button-popup-container {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: white;
-  border: 2px solid #ccc;
-  padding: 15px 15px 8px 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-  border-radius: 4px;
-  width: 200px;
-}
-
-.button-popup-container label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: black;
-  margin-bottom: 10px;
-  cursor: pointer;
-  padding: 8px 10px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-  width: 100%;
-}
-
-.button-popup-container label:hover {
-  background-color: #f0f0f0;
-}
-
-.button-popup-wrapper {
-  position: relative;
-}
-
-input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  display: inline-block;
-  position: relative;
-  border: 2px solid #333;
-  background-color: #33333310;
-  appearance: none;
-  border-radius: 4px;
-}
-
-input[type="checkbox"]:checked {
-  background-color: #45bbff;
-}
-
-input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  top: 1px;
-  left: 4px;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-  box-sizing: border-box;
-}
-
 .group-action-buttons-container {
   display: none;
   margin: 0 10px;
   margin-left: 15px;
   padding: 0 10px;
   border-left: 1px solid grey;
-}
-
-.tabulator-row:hover .group-action-buttons-container {
-  display: flex;
 }
 
 .group-action-button {
@@ -1331,44 +1289,14 @@ input[type="checkbox"]:checked::after {
     display: none;
   }
 }
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.8);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 8px solid rgba(0, 0, 0, 0.1);
-  border-top: 8px solid #006c66;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-overlay p {
-  margin-top: 10px;
-  margin-left: 10px;
-  font-size: 15px;
-  color: #555;
-}
 </style>
+
+<!--
+Paste validations on different columns
+Pasting to two l/s in the first group, pastes in all the l/s in the whole table.
+Changing columns and then toggling the view makes range section not working.
+
+Replace popup of title with some library
+Manage duties code review
+Duties and incoming component height mgmt
+-->

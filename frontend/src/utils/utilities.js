@@ -25,19 +25,13 @@ export function handleError(error) {
     let slices = window.location.href.split("/vue/");
     window.location.href =
       urlStringStartsWith() + "/login/?next=/vue/" + slices[1];
-  } else if (error.response) {
-    showNotification("Error:" + error.response.data, "error");
-    console.log("Error status:", error.response.status);
-    console.log("Error data:", error.response.data);
-  } else if (error.request) {
+  } else if (error.message) {
+    showNotification("Error: " + error.message, "error");
+  } else {
     showNotification(
-      "No response received. The request may have timed out.",
+      "An error occurred while processing your request.\nPlease contact the BioInfo department for assistance.",
       "error"
     );
-    console.log("No response received. The request may have timed out.");
-  } else {
-    showNotification("Error: " + error.message, "error");
-    console.log("Error:", error.message);
   }
 }
 

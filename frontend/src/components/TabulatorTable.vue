@@ -24,7 +24,12 @@ export default {
   },
   data() {
     return {
-      tabulatorInstance: null
+      tabulatorInstance: null,
+      previousData: null,
+      tableFilters: {
+        typesIn: [{ field: "type", type: "=", value: "L" }, { field: "type", type: "=", value: "S" }],
+        typesNotIn: []
+      },
     };
   },
   watch: {
@@ -37,7 +42,7 @@ export default {
       if (newColumns !== oldColumns) {
         this.updateTableColumns();
       }
-    }
+    },
   },
   mounted() {
     this.initializeTable();
@@ -106,12 +111,31 @@ export default {
           options
         );
 
-        this.tabulatorInstance.on("cellEdited", (cell) => {
-          // let updatedData = { field: cell.getField(), value: cell.getValue() };
-          // let rowData = cell.getData();
-          // if (this.tableOptions?.onCellValueChanged) {
-          //   this.tableOptions.onCellValueChanged(rowData, updatedData);
-          // }
+        this.previousData = JSON.stringify(this.rowData);
+
+        this.tabulatorInstance.on("dataChanged", (updatedData) => {
+          const currentData = JSON.stringify(updatedData);
+          const previousParsed = JSON.parse(this.previousData);
+
+          updatedData.forEach((row, index) => {
+            const oldRow = previousParsed[index] || {};
+            Object.keys(row).forEach((key) => {
+              if (key !== "selected" && key !== "samples_submitted" && key !== "quality_check") {
+                if (row[key] !== oldRow[key]) {
+                  const change = {
+                    rowData: row,
+                    updatedData: { field: key, value: row[key] },
+                  };
+
+                  if (this.tableOptions?.onCellValueChanged) {
+                    this.tableOptions.onCellValueChanged(change.rowData, change.updatedData);
+                  }
+                }
+              }
+            });
+          });
+
+          this.previousData = currentData;
         });
 
         this.tabulatorInstance.on("columnResized", () => {
@@ -124,65 +148,11 @@ export default {
       return this.$refs.tabulatorTableRef;
     },
 
-    // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error. Hence only using table update methods.
+    // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error.
+    // Hence not using this function.
     updateTableData() {
       if (this.tabulatorInstance) {
-
-        if (!this.rowData || !Array.isArray(this.rowData)) {
-          console.warn("No valid rowData provided.");
-          return;
-        }
-
-        const currentData = this.tabulatorInstance.getData(); // Fetch current data from the table
-        const currentIds = currentData.map((row) => row.id); // Extract existing row IDs (ensure 'id' field is unique)
-        const newIds = this.rowData.map((row) => row.id); // Extract IDs from the new data
-
-        const newData = [];
-        const updatedData = [];
-        const removedDataIds = [];
-
-        // Split data into updated and new rows based on their IDs
-        this.rowData.forEach((row) => {
-          if (currentIds.includes(row.id)) {
-            updatedData.push(row); // Update rows with matching IDs
-          } else {
-            newData.push(row); // Add new rows with unique IDs
-          }
-        });
-
-        // Identify rows to remove (IDs in current data but not in new data)
-        currentIds.forEach((id) => {
-          if (!newIds.includes(id)) {
-            removedDataIds.push(id);
-          }
-        });
-
-        // Use updateData for updating existing rows
-        if (updatedData.length > 0) {
-          this.tabulatorInstance.updateData(updatedData).then(() => {
-            console.log("Rows updated successfully.");
-          }).catch((error) => {
-            console.error("Error updating rows:", error);
-          });
-        }
-
-        // Use updateOrAddData for new rows to add
-        if (newData.length > 0) {
-          this.tabulatorInstance.updateOrAddData(newData).then(() => {
-            console.log("New rows added successfully.");
-          }).catch((error) => {
-            console.error("Error adding new rows:", error);
-          });
-        }
-
-        // Remove rows that no longer exist in the new data
-        if (removedDataIds.length > 0) {
-          this.tabulatorInstance.deleteRow(removedDataIds).then(() => {
-            console.log("Old rows removed successfully.");
-          }).catch((error) => {
-            console.error("Error removing old rows:", error);
-          });
-        }
+        this.tabulatorInstance.setData(this.rowData);
       }
     },
 
@@ -195,7 +165,95 @@ export default {
       }
     },
 
-    // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error. Hence not using this function.
+    filterTableData(operation, keyword) {
+      let typesIn = this.tableFilters.typesIn;
+      let typesNotIn = this.tableFilters.typesNotIn;
+      switch (operation) {
+        case "search":
+          if (keyword !== "") {
+            this.tableFilters.search = [
+              [
+                { field: "name", type: "like", value: keyword },
+                { field: "request_name", type: "like", value: keyword },
+                { field: "barcode", type: "like", value: keyword },
+                { field: "nucleic_acid_type_name", type: "like", value: keyword },
+                { field: "library_protocol_name", type: "like", value: keyword },
+                { field: "comments", type: "like", value: keyword },
+                { field: "comments_facility", type: "like", value: keyword }
+              ]
+            ];
+          } else {
+            delete this.tableFilters.search;
+          }
+          break;
+
+        case "showLibraries":
+          const foundInL = typesIn.find(item => item.value === "L");
+          if (keyword === true && !foundInL) {
+            typesIn.push({ field: "type", type: "=", value: "L" });
+            typesNotIn = typesNotIn.filter(item => item.value !== "L");
+          } else if (keyword === false && foundInL) {
+            typesIn = typesIn.filter(item => item.value !== "L");
+            typesNotIn.push({ field: "type", type: "!=", value: "L" });
+          }
+          this.tableFilters.typesIn = typesIn;
+          this.tableFilters.typesNotIn = typesNotIn;
+          break;
+
+        case "showSamples":
+          const foundInS = typesIn.find(item => item.value === "S");
+          if (keyword === true && !foundInS) {
+            typesIn.push({ field: "type", type: "=", value: "S" });
+            typesNotIn = typesNotIn.filter(item => item.value !== "S");
+          } else if (keyword === false && foundInS) {
+            typesIn = typesIn.filter(item => item.value !== "S");
+            typesNotIn.push({ field: "type", type: "!=", value: "S" });
+          }
+          this.tableFilters.typesIn = typesIn;
+          this.tableFilters.typesNotIn = typesNotIn;
+          break;
+
+        case "onlySamplesSubmitted":
+          if (keyword === true) {
+            this.tableFilters.onlySamplesSubmitted = {
+              field: "samples_submitted",
+              type: "=",
+              value: keyword
+            };
+          } else {
+            delete this.tableFilters.onlySamplesSubmitted;
+          }
+          break;
+
+        case "onlyGmo":
+          if (keyword === true) {
+            this.tableFilters.onlyGmo = { field: "gmo", type: "=", value: true };
+          } else {
+            delete this.tableFilters.onlyGmo;
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      let flatFilters = Object.entries(this.tableFilters)
+        .filter(([key, value]) => {
+          if (key === "typesNotIn") return false;
+          return Array.isArray(value) ? value.length > 0 : Object.keys(value).length > 0;
+        })
+        .map(([key, value]) => value);
+
+      if (typesNotIn.length > 0) {
+        flatFilters.push(...typesNotIn);
+      }
+
+      console.log(flatFilters)
+      this.tabulatorInstance.setFilter(flatFilters);
+    },
+
+    // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error.
+    // Hence not using this function.
     showAllGroups() {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.blockRedraw();
@@ -214,7 +272,7 @@ export default {
 
     refreshTable() {
       if (this.tabulatorInstance) {
-        this.tabulatorInstance.redraw();
+        this.tabulatorInstance.redraw(true);
       }
     },
 
@@ -236,6 +294,7 @@ export default {
 .tabulator {
   font-size: 12px;
   border: 1px solid grey;
+  border-radius: 4px !important;
 }
 
 .tabulator-table {
@@ -263,6 +322,7 @@ export default {
 .tabulator-cell {
   height: 35px !important;
   line-height: 10px;
+  padding: 0px !important;
   border-bottom: 1px solid grey !important;
   border-right: 1px solid grey !important;
   white-space: nowrap;
@@ -350,6 +410,10 @@ export default {
   background-color: #fff9e1;
 }
 
+.tabulator-row:hover .group-action-buttons-container {
+  display: flex;
+}
+
 .barcode-column .tabulator-col-title {
   padding-right: 12px !important;
 }
@@ -365,9 +429,5 @@ export default {
 .checkbox-column:not(.tabulator-col),
 .empty-column:not(.tabulator-col) {
   padding: 12px 8px !important;
-}
-
-.name-column:not(.tabulator-col) {
-  padding: 8px 8px !important;
 }
 </style>
