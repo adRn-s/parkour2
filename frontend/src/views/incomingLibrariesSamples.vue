@@ -1296,6 +1296,11 @@ Paste validations on different columns
 Pasting to two l/s in the first group, pastes in all the l/s in the whole table.
 Changing columns and then toggling the view makes range section not working.
 
+when user uses keyboard, should go to edit cell mode.
+check if there is a condition for all rows red, when no errors are shown. (like video)
+migrations fix?
+validations
+
 Replace popup of title with some library
 Manage duties code review
 Duties and incoming component height mgmt
