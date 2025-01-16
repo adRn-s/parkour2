@@ -25,16 +25,17 @@ Ext.define("MainHub.view.incominglibrariesvue.IncomingLibrariesVue", {
 
     destroy: function () {
       this.removeIframe();
-    },
+    }
   },
-
-  // var homeUrl = window.location.origin;
 
   addIframe: function () {
     this.add({
       xtype: "component",
       itemId: "incomingLibrariesIframe",
-      html: '<iframe id="incomingLibrariesIframe" src="https://parkour-dev.ie-freiburg.mpg.de/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>',
+      html:
+        '<iframe id="incomingLibrariesIframe" src="' +
+        window.location.origin +
+        '/vue/incoming_libraries_samples" width="100%" height="100%" frameborder="0"></iframe>'
     });
   },
 
@@ -50,5 +51,5 @@ Ext.define("MainHub.view.incominglibrariesvue.IncomingLibrariesVue", {
     if (iframeComponent) {
       this.remove(iframeComponent, true);
     }
-  },
+  }
 });
