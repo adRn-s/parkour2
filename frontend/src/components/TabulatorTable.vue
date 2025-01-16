@@ -27,9 +27,12 @@ export default {
       tabulatorInstance: null,
       previousData: null,
       tableFilters: {
-        typesIn: [{ field: "type", type: "=", value: "L" }, { field: "type", type: "=", value: "S" }],
+        typesIn: [
+          { field: "type", type: "=", value: "L" },
+          { field: "type", type: "=", value: "S" }
+        ],
         typesNotIn: []
-      },
+      }
     };
   },
   watch: {
@@ -42,7 +45,7 @@ export default {
       if (newColumns !== oldColumns) {
         this.updateTableColumns();
       }
-    },
+    }
   },
   mounted() {
     this.initializeTable();
@@ -60,7 +63,7 @@ export default {
             editor: false,
             headerHozAlign: "center",
             resizable: "header",
-            headerContextMenu: [],
+            headerContextMenu: []
           },
           tooltips: true,
           resizableColumns: true,
@@ -120,15 +123,22 @@ export default {
           updatedData.forEach((row, index) => {
             const oldRow = previousParsed[index] || {};
             Object.keys(row).forEach((key) => {
-              if (key !== "selected" && key !== "samples_submitted" && key !== "quality_check") {
+              if (
+                key !== "selected" &&
+                key !== "samples_submitted" &&
+                key !== "quality_check"
+              ) {
                 if (row[key] !== oldRow[key]) {
                   const change = {
                     rowData: row,
-                    updatedData: { field: key, value: row[key] },
+                    updatedData: { field: key, value: row[key] }
                   };
 
                   if (this.tableOptions?.onCellValueChanged) {
-                    this.tableOptions.onCellValueChanged(change.rowData, change.updatedData);
+                    this.tableOptions.onCellValueChanged(
+                      change.rowData,
+                      change.updatedData
+                    );
                   }
                 }
               }
@@ -176,8 +186,16 @@ export default {
                 { field: "name", type: "like", value: keyword },
                 { field: "request_name", type: "like", value: keyword },
                 { field: "barcode", type: "like", value: keyword },
-                { field: "nucleic_acid_type_name", type: "like", value: keyword },
-                { field: "library_protocol_name", type: "like", value: keyword },
+                {
+                  field: "nucleic_acid_type_name",
+                  type: "like",
+                  value: keyword
+                },
+                {
+                  field: "library_protocol_name",
+                  type: "like",
+                  value: keyword
+                },
                 { field: "comments", type: "like", value: keyword },
                 { field: "comments_facility", type: "like", value: keyword }
               ]
@@ -188,12 +206,12 @@ export default {
           break;
 
         case "showLibraries":
-          const foundInL = typesIn.find(item => item.value === "L");
+          const foundInL = typesIn.find((item) => item.value === "L");
           if (keyword === true && !foundInL) {
             typesIn.push({ field: "type", type: "=", value: "L" });
-            typesNotIn = typesNotIn.filter(item => item.value !== "L");
+            typesNotIn = typesNotIn.filter((item) => item.value !== "L");
           } else if (keyword === false && foundInL) {
-            typesIn = typesIn.filter(item => item.value !== "L");
+            typesIn = typesIn.filter((item) => item.value !== "L");
             typesNotIn.push({ field: "type", type: "!=", value: "L" });
           }
           this.tableFilters.typesIn = typesIn;
@@ -201,12 +219,12 @@ export default {
           break;
 
         case "showSamples":
-          const foundInS = typesIn.find(item => item.value === "S");
+          const foundInS = typesIn.find((item) => item.value === "S");
           if (keyword === true && !foundInS) {
             typesIn.push({ field: "type", type: "=", value: "S" });
-            typesNotIn = typesNotIn.filter(item => item.value !== "S");
+            typesNotIn = typesNotIn.filter((item) => item.value !== "S");
           } else if (keyword === false && foundInS) {
-            typesIn = typesIn.filter(item => item.value !== "S");
+            typesIn = typesIn.filter((item) => item.value !== "S");
             typesNotIn.push({ field: "type", type: "!=", value: "S" });
           }
           this.tableFilters.typesIn = typesIn;
@@ -227,7 +245,11 @@ export default {
 
         case "onlyGmo":
           if (keyword === true) {
-            this.tableFilters.onlyGmo = { field: "gmo", type: "=", value: true };
+            this.tableFilters.onlyGmo = {
+              field: "gmo",
+              type: "=",
+              value: true
+            };
           } else {
             delete this.tableFilters.onlyGmo;
           }
@@ -240,7 +262,9 @@ export default {
       let flatFilters = Object.entries(this.tableFilters)
         .filter(([key, value]) => {
           if (key === "typesNotIn") return false;
-          return Array.isArray(value) ? value.length > 0 : Object.keys(value).length > 0;
+          return Array.isArray(value)
+            ? value.length > 0
+            : Object.keys(value).length > 0;
         })
         .map(([key, value]) => value);
 
@@ -248,7 +272,7 @@ export default {
         flatFilters.push(...typesNotIn);
       }
 
-      console.log(flatFilters)
+      console.log(flatFilters);
       this.tabulatorInstance.setFilter(flatFilters);
     },
 
@@ -298,7 +322,7 @@ export default {
 }
 
 .tabulator-table {
-  height: 470px;
+  height: 544px;
   background-color: #7788992d !important;
   z-index: 10;
 }
@@ -314,7 +338,7 @@ export default {
 .tabulator-placeholder {
   text-align: center;
   width: 600px !important;
-  height: 470px !important;
+  height: 544px !important;
   background-color: #7788992d !important;
   white-space: nowrap;
 }

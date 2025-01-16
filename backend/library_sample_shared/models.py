@@ -418,9 +418,8 @@ class GenericLibrarySample(DateTimeMixin):
         blank=True,
     )
 
-    size_distribution_facility = models.CharField(
+    size_distribution_facility = models.FloatField(
         "Size Distribution",
-        max_length=200,
         null=True,
         blank=True,
     )

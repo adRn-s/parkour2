@@ -1,101 +1,229 @@
 <template>
   <div class="parent-container">
-
     <!-- Loading overlay -->
     <div v-if="loading || fakeLoading" class="loading-overlay">
       <div v-if="!fakeLoading" class="spinner"></div>
-      <p v-if="!fakeLoading">Loading <span style="font-weight: bold;">Incoming Libraries</span> and <span
-          style="font-weight: bold;">Samples</span>...</p>
+      <p v-if="!fakeLoading">
+        Loading <span style="font-weight: bold">Incoming Libraries</span> and
+        <span style="font-weight: bold">Samples</span>...
+      </p>
     </div>
 
     <!-- Header -->
     <div class="header">
-      <div class="header-logo" style="display: inline; margin-right: 10px;">
-        <svg style="display: block" fill="none" width="42px" height="42px" version="1.1"
-          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <div class="header-logo" style="display: inline; margin-right: 10px">
+        <svg
+          style="display: block"
+          fill="none"
+          width="42px"
+          height="42px"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+        >
           <g>
-            <path opacity="0.3"
+            <path
+              opacity="0.3"
               d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z"
-              fill="#333333" />
+              fill="#333333"
+            />
             <path
               d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z"
-              stroke="white" stroke-width="1.5" />
-            <path d="M14.5 14.5L9 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M10 15H14.6717C14.853 15 15 14.853 15 14.6716V10" stroke="white" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round" />
+              stroke="white"
+              stroke-width="1.5"
+            />
+            <path
+              d="M14.5 14.5L9 9"
+              stroke="white"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10 15H14.6717C14.853 15 15 14.853 15 14.6716V10"
+              stroke="white"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </g>
         </svg>
       </div>
-      <div class="header-title" style="display: inline;">Incoming Libraries and Samples</div>
+      <div class="header-title" style="display: inline">
+        Incoming Libraries and Samples
+      </div>
 
       <!-- Sticky right section for search, advanced filters, and select columns -->
       <div class="sticky-actions">
         <div class="search-bar">
-          <input ref="searchInput" v-model="searchQuery" type="text" placeholder="Search" />
-          <font-awesome-icon icon="fa-solid fa-magnifying-glass" style="color: darkgrey" />
+          <input
+            ref="searchInput"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search"
+          />
+          <font-awesome-icon
+            icon="fa-solid fa-magnifying-glass"
+            style="color: darkgrey"
+          />
         </div>
         <div class="button-popup-wrapper">
-          <button class="header-button" id="toggleAdvancedFiltersButton" @click="toggleAdvancedFilters">
+          <button
+            class="header-button"
+            id="toggleAdvancedFiltersButton"
+            @click="toggleAdvancedFilters"
+          >
             <font-awesome-icon icon="fa-solid fa-filter" style="color: white" />
-            <span>
-              Advanced Filters
-            </span>
+            <span> Advanced Filters </span>
           </button>
-          <div id="advancedFiltersPopup" v-if="showAdvancedFilters" class="button-popup-container"
-            style="width: 250px; left: -50px;">
+          <div
+            id="advancedFiltersPopup"
+            v-if="showAdvancedFilters"
+            class="button-popup-container"
+            style="width: 250px; left: -50px"
+          >
             <label>
-              <div style="display: flex; justify-content: center; text-align: center;">
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  text-align: center;
+                "
+              >
                 <input type="checkbox" v-model="filters.showLibraries" />
               </div>
-              <div><span style="font-weight: bold;">Show</span> Libraries</div>
+              <div><span style="font-weight: bold">Show</span> Libraries</div>
             </label>
             <label>
-              <div style="display: flex; justify-content: center; text-align: center;">
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  text-align: center;
+                "
+              >
                 <input type="checkbox" v-model="filters.showSamples" />
               </div>
-              <div><span style="font-weight: bold;">Show</span> Samples</div>
+              <div><span style="font-weight: bold">Show</span> Samples</div>
             </label>
             <label>
-              <div style="display: flex; justify-content: center; text-align: center;">
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  text-align: center;
+                "
+              >
                 <input type="checkbox" v-model="filters.onlySamplesSubmitted" />
               </div>
-              <div><span style="font-weight: bold;">Filter Requests</span> with Samples Submitted</div>
+              <div>
+                <span style="font-weight: bold">Filter Requests</span> with
+                Samples Submitted
+              </div>
             </label>
             <label>
-              <div style="display: flex; justify-content: center; text-align: center;">
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  text-align: center;
+                "
+              >
                 <input type="checkbox" v-model="filters.onlyGmo" />
               </div>
-              <div><span style="font-weight: bold;">Filter Requests</span> with GMO ➜ Risk Assessment Done</div>
+              <div>
+                <span style="font-weight: bold">Filter Requests</span> with GMO
+                ➜ Risk Assessment Done
+              </div>
             </label>
           </div>
         </div>
         <div class="button-popup-wrapper">
-          <button class="header-button" id="toggleSelectColumnsButton" @click="toggleSelectColumns">
-            <font-awesome-icon icon="fa-solid fa-columns" style="color: white" />
-            <span>
-              Select Columns
-            </span>
+          <button
+            class="header-button"
+            id="toggleSelectColumnsButton"
+            @click="toggleSelectColumns"
+          >
+            <font-awesome-icon
+              icon="fa-solid fa-columns"
+              style="color: white"
+            />
+            <span> Select Columns </span>
           </button>
-          <div id="selectColumnsPopup" v-if="showSelectColumns" class="button-popup-container"
-            style="left: -50px; width: 250px; padding-right: 8px; padding-top: 10px; padding-bottom: 10px;">
-            <ul style="padding-left: 0px; padding-right: 10px; max-height: 300px; overflow-y: auto;">
-              <li v-for="(column, index) in columnsList" :key="index" style="list-style: none;">
-                <template v-if="column.field !== 'select' && column.field !== 'empty-column'">
+          <div
+            id="selectColumnsPopup"
+            v-if="showSelectColumns"
+            class="button-popup-container"
+            style="
+              left: -50px;
+              width: 250px;
+              padding-right: 8px;
+              padding-top: 10px;
+              padding-bottom: 10px;
+            "
+          >
+            <ul
+              style="
+                padding-left: 0px;
+                padding-right: 10px;
+                max-height: 300px;
+                overflow-y: auto;
+              "
+            >
+              <li
+                v-for="(column, index) in columnsList"
+                :key="index"
+                style="list-style: none"
+              >
+                <template
+                  v-if="
+                    column.field !== 'select' && column.field !== 'empty-column'
+                  "
+                >
                   <label
-                    :style="{ backgroundColor: column.columns ? '#33333310' : 'white', cursor: column.columns ? 'default' : 'pointer' }">
-                    <input v-if="!column.columns" type="checkbox" :checked="column.visible"
-                      @change="toggleColumnVisibility(column, true)" />
-                    <span v-if="column.columns"
-                      style="display: flex; align-items: center; justify-content: center; border: 2px solid black; padding: 0; height: 18px; width: 18px; border-radius: 3px; text-align: center; background-color: #45bbff; color: white;">
+                    :style="{
+                      backgroundColor: column.columns ? '#33333310' : 'white',
+                      cursor: column.columns ? 'default' : 'pointer'
+                    }"
+                  >
+                    <input
+                      v-if="!column.columns"
+                      type="checkbox"
+                      :checked="column.visible"
+                      @change="toggleColumnVisibility(column, true)"
+                    />
+                    <span
+                      v-if="column.columns"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 2px solid black;
+                        padding: 0;
+                        height: 20px;
+                        width: 20px;
+                        border-radius: 4px;
+                        text-align: center;
+                        background-color: orange;
+                        color: white;
+                      "
+                    >
                       🔽
                     </span>
-                    <span style="font-weight: bold;">{{ column.title }}</span>
+                    <span style="font-weight: bold">{{ column.title }}</span>
                   </label>
-                  <ul v-if="column.columns" style="padding-left: 15px;">
-                    <li v-for="(subColumn, subIndex) in column.columns" :key="subIndex" style="list-style: none;">
+                  <ul v-if="column.columns" style="padding-left: 15px">
+                    <li
+                      v-for="(subColumn, subIndex) in column.columns"
+                      :key="subIndex"
+                      style="list-style: none"
+                    >
                       <label>
-                        <input type="checkbox" :checked="subColumn.visible"
-                          @change="toggleColumnVisibility(subColumn, false)" />
+                        <input
+                          type="checkbox"
+                          :checked="subColumn.visible"
+                          @change="toggleColumnVisibility(subColumn, false)"
+                        />
                         {{ subColumn.title }}
                       </label>
                     </li>
@@ -107,54 +235,96 @@
         </div>
         <div class="button-popup-wrapper">
           <button class="header-button" @click="toggleGroups">
-            <font-awesome-icon icon="fa-solid fa-layer-group" style="color: white" />
-            <span>
-              Toggle Views
-            </span>
+            <font-awesome-icon
+              icon="fa-solid fa-layer-group"
+              style="color: white"
+            />
+            <span> Toggle Views </span>
           </button>
         </div>
         <button class="header-button" @click="exportToExcel">
-          <font-awesome-icon icon="fa-solid fa-file-excel" style="color: white" />
-          <span>
-            Export to Excel
-          </span>
+          <font-awesome-icon
+            icon="fa-solid fa-file-excel"
+            style="color: white"
+          />
+          <span> Export to Excel </span>
         </button>
       </div>
     </div>
 
     <!-- Main content section with table -->
     <div class="table-container">
-      <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="librariesSamplesList" :columnDefs="columnsList"
-        :tableOptions="{ ...tableOptions, onCellValueChanged }" />
+      <TabulatorTable
+        v-if="!loading"
+        ref="tabulatorTableRef"
+        :rowData="librariesSamplesList"
+        :columnDefs="columnsList"
+        :tableOptions="{ ...tableOptions, onCellValueChanged }"
+      />
     </div>
 
     <!-- Popup window -->
     <div v-if="showPopupWindow" class="popup-overlay">
-      <div class="popup-container"
-        :style="{ height: popupContents.popupHeight + 'px', width: popupContents.popupWidth + 'px' }">
+      <div
+        class="popup-container"
+        :style="{
+          height: popupContents.popupHeight + 'px',
+          width: popupContents.popupWidth + 'px'
+        }"
+      >
         <div class="popup-header">
-          <svg style="display: block" fill="none" width="42px" height="42px" version="1.1"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <svg
+            style="display: block"
+            fill="none"
+            width="42px"
+            height="42px"
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+          >
             <g>
-              <path opacity="0.3"
+              <path
+                opacity="0.3"
                 d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
-                fill="#323232" />
+                fill="#323232"
+              />
               <path
                 d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
-                stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M12 8V13" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-              <path d="M12 16V15.9888" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                stroke="white"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 8V13"
+                stroke="white"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M12 16V15.9888"
+                stroke="white"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
             </g>
           </svg>
           <span class="popup-title">{{ popupContents.popupTitle }}</span>
-          <button class="popup-close-button" @click="showPopupWindow = false">&times;</button>
+          <button class="popup-close-button" @click="showPopupWindow = false">
+            &times;
+          </button>
         </div>
         <div class="popup-body">
           <div v-html="popupContents.popupDescription"></div>
-          <div v-if="popupContents.popupList && popupContents.popupList.length > 0" class="popup-scrollable-content">
+          <div
+            v-if="popupContents.popupList && popupContents.popupList.length > 0"
+            class="popup-scrollable-content"
+          >
             <ol>
               <li v-for="item in popupContents.popupList" :key="item">
-                {{ item.barcode + " ➜ " }} <span style="font-weight: bold">{{ item.name }}</span></li>
+                {{ item.barcode + " ➜ " }}
+                <span style="font-weight: bold">{{ item.name }}</span>
+              </li>
             </ol>
           </div>
         </div>
@@ -205,20 +375,24 @@ export default {
         groupBy: "request_name",
         placeholder: "No Libraries and Samples to show.",
         groupHeader: (value, count, data) => {
-          const samplesSubmitted = data.some(item => item.samples_submitted === true);
-          const gmo = data.some(item => item.gmo === true);
+          const samplesSubmitted = data.some(
+            (item) => item.samples_submitted === true
+          );
+          const gmo = data.some((item) => item.gmo === true);
           const totalDepth = data.reduce(
             (sum, row) => sum + (row.sequencing_depth || 0),
             0
           );
-          const biosafetyLevel = [...new Set(data.map(item => item.biosafety_level))]
-            .map(level => level && level.toUpperCase())
-            .join(" and ") || "Unknown";
+          const biosafetyLevel =
+            [...new Set(data.map((item) => item.biosafety_level))]
+              .map((level) => level && level.toUpperCase())
+              .join(" and ") || "Unknown";
           return `
   <div style="display: flex; justify-content: space-between; align-items: center;">
 <div style="display: flex; justify-content: space-between; align-items: center;">
-    ${samplesSubmitted ?
-              `
+    ${
+      samplesSubmitted
+        ? `
               <div title="Samples Submitted" style="display: flex; align-items: center;">
                 <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
@@ -228,8 +402,7 @@ export default {
                   </g>
                 </svg>
               </div>`
-              :
-              `<div title="Samples not Submitted" style="display: flex; align-items: center;">
+        : `<div title="Samples not Submitted" style="display: flex; align-items: center;">
                 <svg fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.1" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="#323232"/>
@@ -237,9 +410,10 @@ export default {
                   </g>
                 </svg>
               </div>`
-            }
-    ${gmo ?
-              `
+    }
+    ${
+      gmo
+        ? `
               <div title="GMO: Risk Assessment Done" style="display: flex; align-items: center;">
                 <svg fill="none" width="24px" height="24px" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
@@ -249,8 +423,7 @@ export default {
                   </g>
                 </svg>
               </div>`
-              :
-              `<div title="GMO: Not Needed" style="display: flex; align-items: center;">
+        : `<div title="GMO: Not Needed" style="display: flex; align-items: center;">
                 <svg fill="none" width="24px" height="24px" style="cursor: auto;" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g>
                     <path opacity="0.1" d="M13.8179 4.54512L13.6275 4.27845C12.8298 3.16176 11.1702 3.16176 10.3725 4.27845L10.1821 4.54512C9.76092 5.13471 9.05384 5.45043 8.33373 5.37041L7.48471 5.27608C6.21088 5.13454 5.13454 6.21088 5.27608 7.48471L5.37041 8.33373C5.45043 9.05384 5.13471 9.76092 4.54512 10.1821L4.27845 10.3725C3.16176 11.1702 3.16176 12.8298 4.27845 13.6275L4.54512 13.8179C5.13471 14.2391 5.45043 14.9462 5.37041 15.6663L5.27608 16.5153C5.13454 17.7891 6.21088 18.8655 7.48471 18.7239L8.33373 18.6296C9.05384 18.5496 9.76092 18.8653 10.1821 19.4549L10.3725 19.7215C11.1702 20.8382 12.8298 20.8382 13.6275 19.7215L13.8179 19.4549C14.2391 18.8653 14.9462 18.5496 15.6663 18.6296L16.5153 18.7239C17.7891 18.8655 18.8655 17.7891 18.7239 16.5153L18.6296 15.6663C18.5496 14.9462 18.8653 14.2391 19.4549 13.8179L19.7215 13.6275C20.8382 12.8298 20.8382 11.1702 19.7215 10.3725L19.4549 10.1821C18.8653 9.76092 18.5496 9.05384 18.6296 8.33373L18.7239 7.48471C18.8655 6.21088 17.7891 5.13454 16.5153 5.27608L15.6663 5.37041C14.9462 5.45043 14.2391 5.13471 13.8179 4.54512Z" fill="#323232"/>
@@ -258,7 +431,7 @@ export default {
                   </g>
                 </svg>
               </div>`
-            }
+    }
   <div>
     <span style="font-weight: bold; font-size: 14px;">${value}</span>
     <span style="font-weight: normal; font-size: 12px;">
@@ -328,14 +501,14 @@ export default {
   </div>
 `;
         },
-        initialSort: [{ column: "name", dir: "asc" }],
+        initialSort: [{ column: "name", dir: "asc" }]
       },
       searchQuery: "",
       filters: {
         showLibraries: true,
         showSamples: true,
         onlySamplesSubmitted: false,
-        onlyGmo: false,
+        onlyGmo: false
       },
       showAdvancedFilters: false,
       showSelectColumns: false,
@@ -358,7 +531,10 @@ export default {
   watch: {
     searchQuery(newValue, oldValue) {
       if (newValue !== oldValue) {
-        this.tabulatorInstance.filterTableData("search", newValue === null ? "" : newValue);
+        this.tabulatorInstance.filterTableData(
+          "search",
+          newValue === null ? "" : newValue
+        );
       }
     },
     "filters.showLibraries"(newValue, oldValue) {
@@ -373,7 +549,10 @@ export default {
     },
     "filters.onlySamplesSubmitted"(newValue, oldValue) {
       if (newValue !== oldValue) {
-        this.tabulatorInstance.filterTableData("onlySamplesSubmitted", newValue);
+        this.tabulatorInstance.filterTableData(
+          "onlySamplesSubmitted",
+          newValue
+        );
       }
     },
     "filters.onlyGmo"(newValue, oldValue) {
@@ -407,12 +586,12 @@ export default {
             element.measuring_unit === "concentration"
               ? `${String(element.measured_value || "")} ng/µl`
               : element.measuring_unit === "m"
-                ? `${String(element.measured_value || "")} M`
-                : element.measuring_unit !== "-"
-                  ? `${String(element.measured_value || "")} ${String(
-                    element.measuring_unit || ""
-                  )}`
-                  : `${String(element.measured_value || "")}`,
+              ? `${String(element.measured_value || "")} M`
+              : element.measuring_unit !== "-"
+              ? `${String(element.measured_value || "")} ${String(
+                  element.measuring_unit || ""
+                )}`
+              : `${String(element.measured_value || "")}`,
           volume: element.volume || "",
           mean_fragment_size: element.mean_fragment_size || "",
           comments: element.comments || "",
@@ -423,7 +602,7 @@ export default {
           sequencing_depth: element.sequencing_depth || "",
           rna_quality: element.rna_quality || "",
           gmo: element.gmo || "",
-          comments_facility: element.comments_facility || "",
+          comments_facility: element.comments_facility || ""
         }));
         this.librariesSamplesList = fetchedRows;
       } catch (error) {
@@ -433,7 +612,9 @@ export default {
       }
     },
     setColumns() {
-      const storedColumnState = JSON.parse(localStorage.getItem("columnSettings"));
+      const storedColumnState = JSON.parse(
+        localStorage.getItem("columnSettings")
+      );
 
       let columnList = [
         {
@@ -443,7 +624,7 @@ export default {
           headerSort: false,
           frozen: true,
           resizable: false,
-          width: 36,
+          width: 36
         },
         {
           title: "Select",
@@ -456,8 +637,9 @@ export default {
           formatter: (cell) => {
             const row = cell.getRow();
             const rowData = row.getData();
-            const checkbox = `<input type="checkbox" title="Select" style="top:-4px" ${rowData.selected ? "checked" : ""
-              } />`;
+            const checkbox = `<input type="checkbox" title="Select" style="top:-4px" ${
+              rowData.selected ? "checked" : ""
+            } />`;
 
             return checkbox;
           },
@@ -470,7 +652,7 @@ export default {
             const rowData = clickedRow.getData();
             const checkbox = e.target;
             rowData.selected = checkbox.checked;
-          },
+          }
         },
         {
           title: "Name",
@@ -508,7 +690,7 @@ export default {
           contextMenu: () => this.cellContextMenu(true, false, false),
           cellDblClick: function (e, cell) {
             showNotification("Um, This field is not editable.", "warning");
-          },
+          }
         },
         {
           title: "Barcode",
@@ -526,7 +708,7 @@ export default {
             const value = cell.getValue();
             const finalString = value || "-";
             return this.ellipsisContainer(finalString, true);
-          },
+          }
         },
         {
           title: "From Users",
@@ -549,7 +731,7 @@ export default {
               },
               cellDblClick: function (e, cell) {
                 showNotification("Um, This field is not editable.", "warning");
-              },
+              }
             },
             {
               title: "Protocol",
@@ -567,7 +749,7 @@ export default {
               },
               cellDblClick: function (e, cell) {
                 showNotification("Um, This field is not editable.", "warning");
-              },
+              }
             },
             {
               title: "Comment Library/Input",
@@ -583,7 +765,7 @@ export default {
               },
               cellDblClick: function (e, cell) {
                 showNotification("Um, This field is not editable.", "warning");
-              },
+              }
             },
             {
               title: "Input",
@@ -618,7 +800,7 @@ export default {
               },
               cellDblClick: function (e, cell) {
                 showNotification("Um, This field is not editable.", "warning");
-              },
+              }
             },
             {
               title: "Size",
@@ -636,7 +818,7 @@ export default {
               },
               cellDblClick: function (e, cell) {
                 showNotification("Um, This field is not editable.", "warning");
-              },
+              }
             }
           ]
         },
@@ -660,7 +842,7 @@ export default {
                 ];
                 if (row.type === "L") {
                   return {
-                    values: options.filter(option => option.value !== "m")
+                    values: options.filter((option) => option.value !== "m")
                   };
                 }
                 return { values: options };
@@ -678,7 +860,7 @@ export default {
                 };
                 const finalString = options[value] || value || "Select";
                 return this.ellipsisContainer(finalString);
-              },
+              }
             },
             {
               title: "Measured Value",
@@ -795,9 +977,9 @@ export default {
           if (column.columns) {
             column.columns.forEach((subColumn, subIndex) => {
               columnList[index].columns[subIndex].visible = subColumn.visible;
-            })
+            });
           }
-        })
+        });
       }
 
       this.columnsList = columnList;
@@ -806,15 +988,23 @@ export default {
       const operations = [];
       let isRangeSelected = false;
       let selectedRanges = this.tabulatorInstance.getTable().getRanges();
-      let selectedRangesData = this.tabulatorInstance.getTable().getRangesData();
-      let firstRangeCells = selectedRanges[0] ? selectedRanges[0].getCells() : [];
+      let selectedRangesData = this.tabulatorInstance
+        .getTable()
+        .getRangesData();
+      let firstRangeCells = selectedRanges[0]
+        ? selectedRanges[0].getCells()
+        : [];
       if (selectedRangesData.length > 0) {
         let firstRangeFields = Object.keys(selectedRangesData[0][0]);
-        isRangeSelected = selectedRangesData[0].length > 1 || firstRangeFields.length > 1;
+        isRangeSelected =
+          selectedRangesData[0].length > 1 || firstRangeFields.length > 1;
       }
 
       if (isRangeSelected) {
-        showNotification("Please use Ctrl+C to copy, and Ctrl+V to paste in a range selection.", "info");
+        showNotification(
+          "Please use Ctrl+C to copy, and Ctrl+V to paste in a range selection.",
+          "info"
+        );
       } else {
         if (allowCopy) {
           operations.push({
@@ -822,7 +1012,7 @@ export default {
             action: (e, cell) => {
               const value = cell.getValue();
               navigator.clipboard.writeText(value);
-            },
+            }
           });
         }
 
@@ -833,7 +1023,7 @@ export default {
               navigator.clipboard.readText().then((text) => {
                 cell.setValue(text);
               });
-            },
+            }
           });
         }
 
@@ -843,11 +1033,17 @@ export default {
             action: (e, cell) => {
               const value = cell.getValue();
               const field = cell.getField();
-              this.tabulatorInstance.getTable().getRows().forEach((row) => {
-                if (row.getData().request_name === cell.getRow().getData().request_name)
-                  row.getCell(field).setValue(value);
-              });
-            },
+              this.tabulatorInstance
+                .getTable()
+                .getRows()
+                .forEach((row) => {
+                  if (
+                    row.getData().request_name ===
+                    cell.getRow().getData().request_name
+                  )
+                    row.getCell(field).setValue(value);
+                });
+            }
           });
         }
       }
@@ -892,7 +1088,7 @@ export default {
       const allGroups = this.tabulatorInstance.getTable().getGroups();
 
       let closedGroupCount = 0;
-      allGroups.forEach(group => {
+      allGroups.forEach((group) => {
         if (group._group.visible === false) {
           closedGroupCount++;
         }
@@ -916,7 +1112,7 @@ export default {
 
       switch (this.groupState) {
         case 0:
-          tabulatorElement.classList.remove('no-group-by');
+          tabulatorElement.classList.remove("no-group-by");
           this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
@@ -924,7 +1120,7 @@ export default {
           break;
 
         case 1:
-          tabulatorElement.classList.remove('no-group-by');
+          tabulatorElement.classList.remove("no-group-by");
           this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
@@ -933,7 +1129,7 @@ export default {
           break;
 
         case 2:
-          tabulatorElement.classList.add('no-group-by');
+          tabulatorElement.classList.add("no-group-by");
           this.tabulatorInstance.getTable().showColumn("empty-column");
           this.tabulatorInstance.getTable().hideColumn("select");
           this.tabulatorInstance.getTable().setGroupBy(false);
@@ -962,29 +1158,25 @@ export default {
 
       if (isMainColumn) {
         updatedColumns = this.columnsList.map((col) => {
-          if (col.field === "select")
-            return col;
+          if (col.field === "select") return col;
           else
             return {
               ...col,
-              visible: col === column ? !col.visible : col.visible,
-            }
+              visible: col === column ? !col.visible : col.visible
+            };
         });
       } else {
         updatedColumns = this.columnsList.map((col) => {
-          if (col.field === "select")
-            return col;
+          if (col.field === "select") return col;
           else if (col.columns) {
             return {
               ...col,
               columns: col.columns.map((subCol) => ({
                 ...subCol,
-                visible: subCol === column ? !subCol.visible : subCol.visible,
-              })),
+                visible: subCol === column ? !subCol.visible : subCol.visible
+              }))
             };
-          }
-          else
-            return col;
+          } else return col;
         });
       }
 
@@ -1000,11 +1192,13 @@ export default {
         .find((g) => g.getKey() === groupValue);
       const groupRows = group.getRows();
       const groupElement = group.getElement();
-      const selectedRows = groupRows.filter(row => row.getData().selected);
+      const selectedRows = groupRows.filter((row) => row.getData().selected);
       const type = selectedRows[0] && selectedRows[0].getData().type;
       const requestId = groupRows[0].getData().request_id;
       const requestName = group._group.key;
-      const selectedNamesList = selectedRows.map(item => { return ({ barcode: item.getData().barcode, name: item.getData().name }) });
+      const selectedNamesList = selectedRows.map((item) => {
+        return { barcode: item.getData().barcode, name: item.getData().name };
+      });
       const popupHeight = Math.min(420, 260 + selectedNamesList.length * 22);
 
       switch (action) {
@@ -1018,8 +1212,7 @@ export default {
               checkbox.checked = true;
             }
           });
-          if (!group._group.visible)
-            groupElement.click();
+          if (!group._group.visible) groupElement.click();
           break;
 
         case "deselectAll":
@@ -1032,26 +1225,33 @@ export default {
               checkbox.checked = false;
             }
           });
-          if (!group._group.visible)
-            groupElement.click();
+          if (!group._group.visible) groupElement.click();
           break;
 
         case "samplesSubmitted":
-          let newSamplesSubmittedState = groupRows[0].getData().samples_submitted
+          let newSamplesSubmittedState = groupRows[0].getData()
+            .samples_submitted
             ? !groupRows[0].getData().samples_submitted
             : true;
           let popupTitleSS = "Are you sure?";
-          let popupDescriptionSS = `Marking the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">${newSamplesSubmittedState === true ? "Samples Submitted" : "Samples Not Submitted"}</span>, Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupDescriptionSS = `Marking the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">${
+            newSamplesSubmittedState === true
+              ? "Samples Submitted"
+              : "Samples Not Submitted"
+          }</span>, Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let onYesSS = () => {
             try {
               const payload = {
                 data: JSON.stringify({
-                  result: newSamplesSubmittedState,
+                  result: newSamplesSubmittedState
                 })
               };
               const url = `${urlStringStart}/api/requests/${requestId}/samples_submitted/`;
               axiosRef.post(url, payload);
-              showNotification("Request successfully marked as 'Samples Submitted'.", "success");
+              showNotification(
+                "Request successfully marked as 'Samples Submitted'.",
+                "success"
+              );
               groupRows.forEach((row) => {
                 let rowData = row.getData();
                 rowData.samples_submitted = rowData.samples_submitted
@@ -1059,7 +1259,7 @@ export default {
                   : true;
                 row.update(rowData);
               });
-              this.tabulatorInstance.getTable().setGroupBy("request_name")
+              this.tabulatorInstance.getTable().setGroupBy("request_name");
             } catch (error) {
               handleError(error);
             }
@@ -1068,16 +1268,29 @@ export default {
           let onNoSS = () => {
             this.showPopupWindow = false;
           };
-          this.createPopupWindow(popupTitleSS, popupDescriptionSS, [], onYesSS, onNoSS, 220, 600);
+          this.createPopupWindow(
+            popupTitleSS,
+            popupDescriptionSS,
+            [],
+            onYesSS,
+            onNoSS,
+            220,
+            600
+          );
           break;
 
         case "qualityPassed":
           if (selectedRows.length === 0) {
-            showNotification("Please select libraries/samples in the request first.", "warning")
+            showNotification(
+              "Please select libraries/samples in the request first.",
+              "warning"
+            );
             break;
           }
           let popupTitleQP = `Are you sure?`;
-          let popupDescriptionQP = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Passed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupDescriptionQP = `Marking the following ${
+            type === "L" ? "libraries" : "samples"
+          } from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Passed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let popupListQP = [...selectedNamesList];
           let onYesQP = () => {
             this.qualityCheckChange(selectedRows, "passed");
@@ -1086,16 +1299,29 @@ export default {
           let onNoQP = () => {
             this.showPopupWindow = false;
           };
-          this.createPopupWindow(popupTitleQP, popupDescriptionQP, popupListQP, onYesQP, onNoQP, popupHeight, 700);
+          this.createPopupWindow(
+            popupTitleQP,
+            popupDescriptionQP,
+            popupListQP,
+            onYesQP,
+            onNoQP,
+            popupHeight,
+            700
+          );
           break;
 
         case "qualityCompromised":
           if (selectedRows.length === 0) {
-            showNotification("Please select libraries/samples in the request first.", "warning")
+            showNotification(
+              "Please select libraries/samples in the request first.",
+              "warning"
+            );
             break;
           }
           let popupTitleQC = `Are you sure?`;
-          let popupDescriptionQC = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Compromised</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupDescriptionQC = `Marking the following ${
+            type === "L" ? "libraries" : "samples"
+          } from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Compromised</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let popupListQC = [...selectedNamesList];
           let onYesQC = () => {
             this.qualityCheckChange(selectedRows, "compromised");
@@ -1104,16 +1330,29 @@ export default {
           let onNoQC = () => {
             this.showPopupWindow = false;
           };
-          this.createPopupWindow(popupTitleQC, popupDescriptionQC, popupListQC, onYesQC, onNoQC, popupHeight, 700);
+          this.createPopupWindow(
+            popupTitleQC,
+            popupDescriptionQC,
+            popupListQC,
+            onYesQC,
+            onNoQC,
+            popupHeight,
+            700
+          );
           break;
 
         case "qualityFailed":
           if (selectedRows.length === 0) {
-            showNotification("Please select libraries/samples in the request first.", "warning")
+            showNotification(
+              "Please select libraries/samples in the request first.",
+              "warning"
+            );
             break;
           }
           let popupTitleQF = `Are you sure?`;
-          let popupDescriptionQF = `Marking the following ${type === "L" ? "libraries" : "samples"} from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Failed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
+          let popupDescriptionQF = `Marking the following ${
+            type === "L" ? "libraries" : "samples"
+          } from the request <span style="font-weight: bold">'${requestName}'</span> as <span style="font-weight: bold">Quality Check: Failed</span>. Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let popupListQF = [...selectedNamesList];
           let onYesQF = () => {
             this.qualityCheckChange(selectedRows, "failed");
@@ -1122,7 +1361,15 @@ export default {
           let onNoQF = () => {
             this.showPopupWindow = false;
           };
-          this.createPopupWindow(popupTitleQF, popupDescriptionQF, popupListQF, onYesQF, onNoQF, popupHeight, 700);
+          this.createPopupWindow(
+            popupTitleQF,
+            popupDescriptionQF,
+            popupListQF,
+            onYesQF,
+            onNoQF,
+            popupHeight,
+            700
+          );
           break;
       }
     },
@@ -1136,12 +1383,15 @@ export default {
             {
               pk: rowData.pk,
               record_type: rowData.record_type,
-              [updatedData.field]: updatedData.value,
-            },
-          ]),
+              [updatedData.field]: updatedData.value
+            }
+          ])
         };
 
-        await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
+        await axiosRef.post(
+          `${urlStringStart}/api/incoming_libraries/edit/`,
+          payload
+        );
         showNotification("Data updated successfully.", "success");
       } catch (error) {
         handleError(error);
@@ -1150,17 +1400,20 @@ export default {
     qualityCheckChange(groupRows, qualityCheck) {
       const payload = {
         data: JSON.stringify(
-          groupRows.map(row => ({
+          groupRows.map((row) => ({
             pk: row.getData().pk,
             record_type: row.getData().record_type,
-            quality_check: qualityCheck,
+            quality_check: qualityCheck
           }))
         )
       };
       axiosRef
         .post(`${urlStringStart}/api/incoming_libraries/edit/`, payload)
         .then(() => {
-          showNotification("Quality check status updated successfully", "success");
+          showNotification(
+            "Quality check status updated successfully",
+            "success"
+          );
           this.getLibrariesSamples();
         })
         .catch((error) => {
@@ -1175,8 +1428,7 @@ export default {
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
-      if (this.groupState !== 2)
-        this.toggleGroups(true);
+      if (this.groupState !== 2) this.toggleGroups(true);
       this.tabulatorInstance.getTable().download("xlsx", filename, {
         sheetName: "Incoming Libraries & Samples"
       });
@@ -1184,11 +1436,21 @@ export default {
       showNotification("Data successfully exported!", "success");
     },
     ellipsisContainer(text, boldText) {
-      return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 12px 8px 12px 12px; font-weight: ${boldText === true ? "bold" : "normal"}">
+      return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 12px 8px 12px 12px; font-weight: ${
+        boldText === true ? "bold" : "normal"
+      }">
                 ${text}
               </div>`;
     },
-    createPopupWindow(popupTitle, popupDescription, popupList, onYes, onNo, popupHeight, popupWidth) {
+    createPopupWindow(
+      popupTitle,
+      popupDescription,
+      popupList,
+      onYes,
+      onNo,
+      popupHeight,
+      popupWidth
+    ) {
       this.popupContents.popupTitle = popupTitle;
       this.popupContents.popupDescription = popupDescription;
       this.popupContents.popupList = popupList;
@@ -1292,16 +1554,14 @@ export default {
 </style>
 
 <!--
+gmo icon upon update
 Paste validations on different columns
 Pasting to two l/s in the first group, pastes in all the l/s in the whole table.
 Changing columns and then toggling the view makes range section not working.
+Which fields to disable editing when library or sample.
 
-when user uses keyboard, should go to edit cell mode.
-check if there is a condition for all rows red, when no errors are shown. (like video)
 migrations fix?
-validations
 
-Replace popup of title with some library
-Manage duties code review
-Duties and incoming component height mgmt
+Replace popup of DIV title with some library
+Export to Excel formatting
 -->
