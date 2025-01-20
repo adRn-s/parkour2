@@ -12,7 +12,7 @@ diff-match-patch==20241021
     # via django-import-export
 dj-database-url==2.3.0
     # via -r backend/requirements/base.in
-django==4.2.17
+django==4.2.18
     # via
     #   -r backend/requirements/base.in
     #   dj-database-url
@@ -29,7 +29,7 @@ django-authtools @ git+https://github.com/adRn-s/django-authtools@a3284c976719bd
     # via -r backend/requirements/base.in
 django-extensions==3.2.3
     # via -r backend/requirements/base.in
-django-import-export==4.3.3
+django-import-export==4.3.4
     # via -r backend/requirements/base.in
 django-linear-migrations==2.16.0
     # via -r backend/requirements/base.in
@@ -59,7 +59,7 @@ jsonschema-specifications==2024.10.1
     # via jsonschema
 lxml==5.3.0
     # via python-docx
-numpy==2.2.1
+numpy==2.2.2
     # via
     #   -r backend/requirements/base.in
     #   pandas
@@ -83,7 +83,7 @@ pytz==2024.2
     # via pandas
 pyyaml==6.0.2
     # via drf-spectacular
-referencing==0.35.1
+referencing==0.36.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -103,6 +103,7 @@ typing-extensions==4.12.2
     # via
     #   dj-database-url
     #   python-docx
+    #   referencing
 tzdata==2024.2
     # via
     #   django
