@@ -71,7 +71,7 @@ export default {
           selectableRangeColumns: false,
           selectableRangeRows: false,
           selectableRangeClearCells: false,
-          editTriggerEvent: "dblclick",
+          editTriggerEvent: "click",
           clipboard: true,
           clipboardCopyStyled: false,
           clipboardCopyConfig: {
@@ -272,7 +272,7 @@ export default {
 
     refreshTable() {
       if (this.tabulatorInstance) {
-        this.tabulatorInstance.redraw(true);
+        this.tabulatorInstance.redraw();
       }
     },
 
