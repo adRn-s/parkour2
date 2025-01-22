@@ -151,6 +151,16 @@ export default {
         this.tabulatorInstance.on("columnResized", () => {
           this.refreshTable();
         });
+
+        this.tabulatorInstance.on("clipboardCopied", () => {
+          this.recreateTable();
+          setTimeout(() => {
+            var topLeft = this.tabulatorInstance.getRows()[2].getCells()[1];
+            var bottomRight = this.tabulatorInstance.getRows()[2].getCells()[6];
+
+            this.tabulatorInstance.addRange(topLeft, bottomRight);
+          }, 1000);
+        });
       }
     },
 
