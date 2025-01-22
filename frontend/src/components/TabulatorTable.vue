@@ -26,13 +26,19 @@ export default {
     return {
       tabulatorInstance: null,
       previousData: null,
-      tableFilters: {
+      tableFiltersState: {
         typesIn: [
           { field: "type", type: "=", value: "L" },
           { field: "type", type: "=", value: "S" }
         ],
         typesNotIn: []
-      }
+      },
+      tableRangeBoundsState: {
+        start: null,
+        end: null
+      },
+      tableViewsToggleState: 0,
+      tableGroupsToggleState: []
     };
   },
   watch: {
@@ -68,7 +74,12 @@ export default {
           tooltips: true,
           resizableColumns: true,
           groupToggleElement: "header",
-          groupStartOpen: true,
+          groupStartOpen: (value) => {
+            const groupState = this.tableGroupsToggleState.find(
+              (item) => item.group === value
+            );
+            return groupState ? groupState.isOpen : true;
+          },
           selectable: true,
           selectableRange: 1,
           selectableRangeColumns: false,
@@ -83,24 +94,95 @@ export default {
             columnHeaders: false
           },
           clipboardCopyRowRange: "range",
-          clipboardPasteParser: "range",
           clipboardPasteAction: "range",
-          // clipboardPasteParser: (clipboard) => {
-          //   const rows= this.tabulatorInstance.getRows();
-          //         return rows.map(row => {
-          //             return row.map((cell, colIndex) => {
-          //                 const column = table.getColumnDefinitions()[colIndex];
-          //                 if (column.columns[colIndex].editor) {
-          //                     // Allow pasting only in editable columns
-          //                     return cell;
-          //                 } else {
-          //                     // Prevent pasting in non-editable columns
-          //                     return null;
-          //                 }
-          //             });
-          //         });
-          //     },
-          //     clipboardPasteAction: "update",
+          clipboardPasteParser: (clipboard) => {
+            console.log("Clipboard content:", clipboard);
+
+            const selectedRanges = this.tabulatorInstance.getRanges();
+            console.log("Selected ranges:", selectedRanges);
+
+            if (!selectedRanges || selectedRanges.length === 0) {
+              alert("Please select a range before pasting.");
+              return [];
+            }
+
+            const firstRange = selectedRanges[0]._range;
+            console.log("First range:", firstRange);
+
+            const rowStart = firstRange.top;
+            const rowEnd = firstRange.bottom;
+            const colStart = firstRange.left;
+            const colEnd = firstRange.right;
+
+            console.log("Range bounds:", {
+              rowStart,
+              rowEnd,
+              colStart,
+              colEnd
+            });
+
+            const selectedRowCount = rowEnd - rowStart + 1;
+            const selectedColCount = colEnd - colStart + 1;
+
+            console.log("Selected range dimensions:", {
+              selectedRowCount,
+              selectedColCount
+            });
+
+            const pastedData = clipboard
+              .split("\n")
+              .map((row) => row.split("\t"));
+            console.log("pasted data", pastedData);
+            const numPastedRows = pastedData.length;
+            const numPastedCols = pastedData[0]?.length || 0;
+
+            console.log("Pasted data dimensions:", {
+              numPastedRows,
+              numPastedCols
+            });
+
+            if (
+              numPastedRows > selectedRowCount ||
+              numPastedCols > selectedColCount
+            ) {
+              alert(
+                "Pasted data exceeds the selected range. Please adjust your selection."
+              );
+              console.log(
+                "Pasting canceled: Pasted data dimensions exceed selected range."
+              );
+              return [];
+            }
+
+            console.log(
+              "Pasting allowed: Data fits within the selected range."
+            );
+
+            const allColumns = this.tabulatorInstance.getColumns();
+            const rangeColumns = allColumns.slice(colStart + 2, colEnd + 3);
+            console.log("Range columns:", rangeColumns);
+
+            pastedData.forEach((rowData, rowIndex) => {
+              rowData.forEach((cellValue, colIndex) => {
+                const rowIndexInTable = rowStart + rowIndex + 1;
+                const column = rangeColumns[colIndex];
+
+                if (column) {
+                  const field = column.getField();
+                  const row =
+                    this.tabulatorInstance.getRowFromPosition(rowIndexInTable);
+
+                  if (row && field) {
+                    console.log(
+                      `Updating cell at Row ${rowIndexInTable}, Column ${colIndex}: ${field} = ${cellValue}`
+                    );
+                    row.update({ [field]: Number(cellValue) });
+                  }
+                }
+              });
+            });
+            return [];
+          },
           dependencies: {
             XLSX: XLSX
           },
@@ -113,6 +195,17 @@ export default {
           this.$refs.tabulatorTableRef,
           options
         );
+
+        this.tabulatorInstance.on("tableBuilt", () => {
+          if (
+            this.tableRangeBoundsState.start &&
+            this.tableRangeBoundsState.end
+          ) {
+            let start = this.tableRangeBoundsState.start;
+            let end = this.tableRangeBoundsState.end;
+            this.tabulatorInstance.addRange(start, end);
+          }
+        });
 
         this.previousData = JSON.stringify(this.rowData);
 
@@ -152,15 +245,48 @@ export default {
           this.refreshTable();
         });
 
+        this.tabulatorInstance.on("rangeChanged", (range) => {
+          const start = range.getBounds().start;
+          const end = range.getBounds().end;
+          this.tableRangeBoundsState = {
+            start: start.getComponent(),
+            end: end.getComponent()
+          };
+        });
+
         this.tabulatorInstance.on("clipboardCopied", () => {
           this.recreateTable();
-          setTimeout(() => {
-            var topLeft = this.tabulatorInstance.getRows()[2].getCells()[1];
-            var bottomRight = this.tabulatorInstance.getRows()[2].getCells()[6];
-
-            this.tabulatorInstance.addRange(topLeft, bottomRight);
-          }, 1000);
         });
+
+        this.tabulatorInstance.on(
+          "groupVisibilityChanged",
+          (group, visible) => {
+            const groupValue = group.getKey();
+
+            const index = this.tableGroupsToggleState.findIndex(
+              (item) => item.group === groupValue
+            );
+
+            if (index !== -1) {
+              this.tableGroupsToggleState[index].isOpen = visible;
+            } else {
+              this.tableGroupsToggleState.push({
+                group: groupValue,
+                isOpen: visible
+              });
+            }
+
+            const rows = this.tabulatorInstance.getRows();
+            if (rows.length > 0) {
+              const firstRow = rows[0];
+              const cells = firstRow.getCells();
+              if (cells.length > 0) {
+                const topLeftCell = cells[1];
+                this.tabulatorInstance.addRange(topLeftCell, topLeftCell);
+              }
+            }
+          }
+        );
       }
     },
 
@@ -186,12 +312,12 @@ export default {
     },
 
     filterTableData(operation, keyword) {
-      let typesIn = this.tableFilters.typesIn;
-      let typesNotIn = this.tableFilters.typesNotIn;
+      let typesIn = this.tableFiltersState.typesIn;
+      let typesNotIn = this.tableFiltersState.typesNotIn;
       switch (operation) {
         case "search":
           if (keyword !== "") {
-            this.tableFilters.search = [
+            this.tableFiltersState.search = [
               [
                 { field: "name", type: "like", value: keyword },
                 { field: "request_name", type: "like", value: keyword },
@@ -211,7 +337,7 @@ export default {
               ]
             ];
           } else {
-            delete this.tableFilters.search;
+            delete this.tableFiltersState.search;
           }
           break;
 
@@ -224,8 +350,8 @@ export default {
             typesIn = typesIn.filter((item) => item.value !== "L");
             typesNotIn.push({ field: "type", type: "!=", value: "L" });
           }
-          this.tableFilters.typesIn = typesIn;
-          this.tableFilters.typesNotIn = typesNotIn;
+          this.tableFiltersState.typesIn = typesIn;
+          this.tableFiltersState.typesNotIn = typesNotIn;
           break;
 
         case "showSamples":
@@ -237,31 +363,31 @@ export default {
             typesIn = typesIn.filter((item) => item.value !== "S");
             typesNotIn.push({ field: "type", type: "!=", value: "S" });
           }
-          this.tableFilters.typesIn = typesIn;
-          this.tableFilters.typesNotIn = typesNotIn;
+          this.tableFiltersState.typesIn = typesIn;
+          this.tableFiltersState.typesNotIn = typesNotIn;
           break;
 
         case "onlySamplesSubmitted":
           if (keyword === true) {
-            this.tableFilters.onlySamplesSubmitted = {
+            this.tableFiltersState.onlySamplesSubmitted = {
               field: "samples_submitted",
               type: "=",
               value: keyword
             };
           } else {
-            delete this.tableFilters.onlySamplesSubmitted;
+            delete this.tableFiltersState.onlySamplesSubmitted;
           }
           break;
 
         case "onlyGmo":
           if (keyword === true) {
-            this.tableFilters.onlyGmo = {
+            this.tableFiltersState.onlyGmo = {
               field: "gmo",
               type: "=",
               value: true
             };
           } else {
-            delete this.tableFilters.onlyGmo;
+            delete this.tableFiltersState.onlyGmo;
           }
           break;
 
@@ -269,7 +395,7 @@ export default {
           break;
       }
 
-      let flatFilters = Object.entries(this.tableFilters)
+      let flatFilters = Object.entries(this.tableFiltersState)
         .filter(([key, value]) => {
           if (key === "typesNotIn") return false;
           return Array.isArray(value)
@@ -282,7 +408,6 @@ export default {
         flatFilters.push(...typesNotIn);
       }
 
-      console.log(flatFilters);
       this.tabulatorInstance.setFilter(flatFilters);
     },
 

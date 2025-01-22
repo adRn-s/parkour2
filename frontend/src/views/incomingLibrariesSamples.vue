@@ -1555,9 +1555,8 @@ export default {
 
 <!--
 Paste validations on different columns: Change the parser method and add validations to it
-Pasting to two l/s in the first group, pastes in all the l/s in the whole table: Change paste parser and check the selected range and paste only if within
 Changing columns and then toggling the view makes range section not working: Recreate table upon changeing view
-Navigation paste, works only after pressing enter: Recreate table upon copying
+Fix ToggleView: Move state to Table Component
 
 Which fields to disable editing when library or sample.
 GMO icon upon update
