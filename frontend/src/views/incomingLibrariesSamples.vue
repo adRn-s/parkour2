@@ -1553,6 +1553,8 @@ export default {
 
 <!--
 Clipboard copy con last view reset groupBy: Maintain groupBy in state and apply to it
+Last view should not show selection checkboxes
+Show white animation upon Sample Submitted or Quality Check
 Paste validations on different columns: Change the parser method and add validations to it
 Which fields to disable editing when library or sample.
 GMO icon upon update
