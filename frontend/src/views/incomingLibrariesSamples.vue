@@ -1095,17 +1095,13 @@ export default {
       });
 
       if (goToInitial === true || this.groupState === 2) {
-        this.tabulatorInstance.getTable().setGroupBy(false);
         this.groupState = 0;
       } else {
         if (closedGroupCount === allGroups.length) {
-          this.tabulatorInstance.getTable().setGroupBy("request_name");
           this.groupState = 2;
         } else if (closedGroupCount === 0) {
-          this.tabulatorInstance.getTable().setGroupBy(false);
           this.groupState = 1;
         } else {
-          this.tabulatorInstance.getTable().setGroupBy(false);
           this.groupState = 0;
         }
       }
@@ -1113,27 +1109,29 @@ export default {
       switch (this.groupState) {
         case 0:
           tabulatorElement.classList.remove("no-group-by");
+          this.tabulatorInstance.showAllGroups();
           this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
-          this.tabulatorInstance.refreshTable();
+          this.tabulatorInstance.recreateTable();
           break;
 
         case 1:
           tabulatorElement.classList.remove("no-group-by");
+          this.tabulatorInstance.hideAllGroups();
           this.tabulatorInstance.getTable().showColumn("select");
           this.tabulatorInstance.getTable().hideColumn("empty-column");
           this.tabulatorInstance.getTable().setGroupBy("request_name");
-          this.tabulatorInstance.hideAllGroups();
-          this.tabulatorInstance.refreshTable();
+          this.tabulatorInstance.recreateTable();
           break;
 
         case 2:
           tabulatorElement.classList.add("no-group-by");
+          this.tabulatorInstance.showAllGroups();
           this.tabulatorInstance.getTable().showColumn("empty-column");
           this.tabulatorInstance.getTable().hideColumn("select");
+          this.tabulatorInstance.recreateTable();
           this.tabulatorInstance.getTable().setGroupBy(false);
-          this.tabulatorInstance.refreshTable();
           break;
       }
       setTimeout(() => {
@@ -1153,7 +1151,7 @@ export default {
       }
     },
     toggleColumnVisibility(column, isMainColumn) {
-      this.toggleGroups(true);
+      this.fakeLoading = true;
       let updatedColumns;
 
       if (isMainColumn) {
@@ -1182,6 +1180,9 @@ export default {
 
       localStorage.setItem("columnSettings", JSON.stringify(updatedColumns));
       this.columnsList = updatedColumns;
+      setTimeout(() => {
+        this.fakeLoading = false;
+      }, 300);
     },
     handleGroupButtonClick(event, groupValue, action) {
       event.stopPropagation();
@@ -1259,7 +1260,7 @@ export default {
                   : true;
                 row.update(rowData);
               });
-              this.tabulatorInstance.getTable().setGroupBy("request_name");
+              this.tabulatorInstance.recreateTable();
             } catch (error) {
               handleError(error);
             }
@@ -1374,9 +1375,6 @@ export default {
       }
     },
     async onCellValueChanged(rowData, updatedData) {
-      if (updatedData.field === "gmo") {
-        this.tabulatorInstance.getTable().setGroupBy("request_name");
-      }
       try {
         const payload = {
           data: JSON.stringify([
@@ -1429,11 +1427,11 @@ export default {
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
       if (this.groupState !== 2) this.toggleGroups(true);
-      this.tabulatorInstance.getTable().download("xlsx", filename, {
-        sheetName: "Incoming Libraries & Samples"
-      });
-
-      showNotification("Data successfully exported!", "success");
+      setTimeout(() => {
+        this.tabulatorInstance.getTable().download("xlsx", filename, {
+          sheetName: "Incoming Libraries & Samples"
+        });
+      }, 300);
     },
     ellipsisContainer(text, boldText) {
       return `<div title='${text}' style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 12px 8px 12px 12px; font-weight: ${
@@ -1554,10 +1552,8 @@ export default {
 </style>
 
 <!--
+Clipboard copy con last view reset groupBy: Maintain groupBy in state and apply to it
 Paste validations on different columns: Change the parser method and add validations to it
-Changing columns and then toggling the view makes range section not working: Recreate table upon changeing view
-Fix ToggleView: Move state to Table Component
-
 Which fields to disable editing when library or sample.
 GMO icon upon update
 

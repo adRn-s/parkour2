@@ -78,7 +78,7 @@ export default {
             const groupState = this.tableGroupsToggleState.find(
               (item) => item.group === value
             );
-            return groupState ? groupState.isOpen : true;
+            return groupState ? !groupState.isClose : true;
           },
           selectable: true,
           selectableRange: 1,
@@ -203,7 +203,16 @@ export default {
           ) {
             let start = this.tableRangeBoundsState.start;
             let end = this.tableRangeBoundsState.end;
-            this.tabulatorInstance.addRange(start, end);
+            this.tabulatorInstance.addRange(
+              start.getComponent(),
+              end.getComponent()
+            );
+          }
+
+          if (!document.querySelector(".button-popup-container")) {
+            document
+              .getElementsByClassName("tabulator-range-selected")[0]
+              ?.click();
           }
         });
 
@@ -249,8 +258,8 @@ export default {
           const start = range.getBounds().start;
           const end = range.getBounds().end;
           this.tableRangeBoundsState = {
-            start: start.getComponent(),
-            end: end.getComponent()
+            start: start,
+            end: end
           };
         });
 
@@ -268,11 +277,11 @@ export default {
             );
 
             if (index !== -1) {
-              this.tableGroupsToggleState[index].isOpen = visible;
+              this.tableGroupsToggleState[index].isClose = !visible;
             } else {
               this.tableGroupsToggleState.push({
                 group: groupValue,
-                isOpen: visible
+                isClose: !visible
               });
             }
 
@@ -304,10 +313,17 @@ export default {
 
     updateTableColumns() {
       if (this.tabulatorInstance) {
-        this.tabulatorInstance.blockRedraw();
         this.tabulatorInstance.setColumns(this.columnDefs);
-        this.tabulatorInstance.restoreRedraw();
-        this.refreshTable();
+        this.getTabulatorElement().classList.remove("no-group-by");
+        this.showAllGroups();
+        this.tabulatorInstance.showColumn("select");
+        this.tabulatorInstance.hideColumn("empty-column");
+        this.tabulatorInstance.setGroupBy("request_name");
+        this.tableRangeBoundsState = {
+          start: null,
+          end: null
+        };
+        this.recreateTable();
       }
     },
 
@@ -411,8 +427,6 @@ export default {
       this.tabulatorInstance.setFilter(flatFilters);
     },
 
-    // Tabulator Bug: When we use group.show(), range paste does not work and gives "No bounds defined for this range" error.
-    // Hence not using this function.
     showAllGroups() {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.blockRedraw();
