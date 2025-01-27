@@ -2,7 +2,7 @@
 #    uv pip compile --universal --python-version 3.10 backend/requirements/base.in -o backend/requirements/3.10/base.txt
 asgiref==3.8.1
     # via django
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
@@ -35,7 +35,7 @@ django-linear-migrations==2.16.0
     # via -r backend/requirements/base.in
 django-monthfield==0.1.4
     # via -r backend/requirements/base.in
-django-simple-history==3.7.0
+django-simple-history==3.8.0
     # via -r backend/requirements/base.in
 djangorestframework==3.15.2
     # via
@@ -45,7 +45,7 @@ drf-spectacular==0.28.0
     # via -r backend/requirements/base.in
 et-xmlfile==2.0.0
     # via openpyxl
-fonttools==4.55.3
+fonttools==4.55.6
     # via fpdf2
 fpdf2==2.8.2
     # via -r backend/requirements/base.in
@@ -87,7 +87,7 @@ pytz==2024.2
     # via pandas
 pyyaml==6.0.2
     # via drf-spectacular
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -99,7 +99,7 @@ six==1.17.0
     # via python-dateutil
 sqlparse==0.5.3
     # via django
-tablib==3.7.0
+tablib==3.8.0
     # via django-import-export
 tblib==3.0.0
     # via -r backend/requirements/base.in
@@ -109,7 +109,7 @@ typing-extensions==4.12.2
     #   dj-database-url
     #   python-docx
     #   referencing
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   django
     #   pandas
