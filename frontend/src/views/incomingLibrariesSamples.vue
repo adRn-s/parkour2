@@ -360,7 +360,6 @@ export default {
       fakeLoading: false,
       librariesSamplesList: [],
       columnsList: [],
-      groupState: 0,
       showPopupWindow: false,
       popupContents: {
         popupTitle: "Are you sure?",
@@ -372,7 +371,6 @@ export default {
         popupWidth: 600
       },
       tableOptions: {
-        groupBy: "request_name",
         placeholder: "No Libraries and Samples to show.",
         groupHeader: (value, count, data) => {
           const samplesSubmitted = data.some(
@@ -1082,58 +1080,9 @@ export default {
         this.showSelectColumns = false;
       }
     },
-    toggleGroups(goToInitial) {
+    toggleGroups(goToInitial, fromExport) {
       this.fakeLoading = true;
-      const tabulatorElement = this.tabulatorInstance.getTabulatorElement();
-      const allGroups = this.tabulatorInstance.getTable().getGroups();
-
-      let closedGroupCount = 0;
-      allGroups.forEach((group) => {
-        if (group._group.visible === false) {
-          closedGroupCount++;
-        }
-      });
-
-      if (goToInitial === true || this.groupState === 2) {
-        this.groupState = 0;
-      } else {
-        if (closedGroupCount === allGroups.length) {
-          this.groupState = 2;
-        } else if (closedGroupCount === 0) {
-          this.groupState = 1;
-        } else {
-          this.groupState = 0;
-        }
-      }
-
-      switch (this.groupState) {
-        case 0:
-          tabulatorElement.classList.remove("no-group-by");
-          this.tabulatorInstance.showAllGroups();
-          this.tabulatorInstance.getTable().showColumn("select");
-          this.tabulatorInstance.getTable().hideColumn("empty-column");
-          this.tabulatorInstance.getTable().setGroupBy("request_name");
-          this.tabulatorInstance.recreateTable();
-          break;
-
-        case 1:
-          tabulatorElement.classList.remove("no-group-by");
-          this.tabulatorInstance.hideAllGroups();
-          this.tabulatorInstance.getTable().showColumn("select");
-          this.tabulatorInstance.getTable().hideColumn("empty-column");
-          this.tabulatorInstance.getTable().setGroupBy("request_name");
-          this.tabulatorInstance.recreateTable();
-          break;
-
-        case 2:
-          tabulatorElement.classList.add("no-group-by");
-          this.tabulatorInstance.showAllGroups();
-          this.tabulatorInstance.getTable().showColumn("empty-column");
-          this.tabulatorInstance.getTable().hideColumn("select");
-          this.tabulatorInstance.recreateTable();
-          this.tabulatorInstance.getTable().setGroupBy(false);
-          break;
-      }
+      this.tabulatorInstance.toggleGroups(goToInitial, fromExport);
       setTimeout(() => {
         this.fakeLoading = false;
       }, 300);
@@ -1242,6 +1191,7 @@ export default {
           }</span>, Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let onYesSS = () => {
             try {
+              this.fakeLoading = true;
               const payload = {
                 data: JSON.stringify({
                   result: newSamplesSubmittedState
@@ -1263,6 +1213,10 @@ export default {
               this.tabulatorInstance.recreateTable();
             } catch (error) {
               handleError(error);
+            } finally {
+              setTimeout(() => {
+                this.fakeLoading = false;
+              }, 300);
             }
             this.showPopupWindow = false;
           };
@@ -1396,6 +1350,7 @@ export default {
       }
     },
     qualityCheckChange(groupRows, qualityCheck) {
+      this.fakeLoading = true;
       const payload = {
         data: JSON.stringify(
           groupRows.map((row) => ({
@@ -1417,6 +1372,9 @@ export default {
         .catch((error) => {
           handleError(error);
         });
+      setTimeout(() => {
+        this.fakeLoading = false;
+      }, 300);
     },
     exportToExcel() {
       const today = new Date();
@@ -1426,7 +1384,7 @@ export default {
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
 
-      if (this.groupState !== 2) this.toggleGroups(true);
+      this.toggleGroups(true, true);
       setTimeout(() => {
         this.tabulatorInstance.getTable().download("xlsx", filename, {
           sheetName: "Incoming Libraries & Samples"
@@ -1552,12 +1510,10 @@ export default {
 </style>
 
 <!--
-Clipboard copy con last view reset groupBy: Maintain groupBy in state and apply to it
-Last view should not show selection checkboxes
-Show white animation upon Sample Submitted or Quality Check
 Paste validations on different columns: Change the parser method and add validations to it
 Which fields to disable editing when library or sample.
 GMO icon upon update
+When recreating the table, do white animation
 
 migrations fix?
 

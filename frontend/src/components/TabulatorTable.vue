@@ -37,8 +37,14 @@ export default {
         start: null,
         end: null
       },
-      tableViewsToggleState: 0,
-      tableGroupsToggleState: []
+      tableGroupsToggleState: 0,
+      tableGroupsConfig: {
+        showColumn: "select",
+        hideColumn: "empty-column",
+        groupBy: "request_name",
+        noGroupByClass: false
+      },
+      tableEachGroupsToggleState: []
     };
   },
   watch: {
@@ -74,12 +80,6 @@ export default {
           tooltips: true,
           resizableColumns: true,
           groupToggleElement: "header",
-          groupStartOpen: (value) => {
-            const groupState = this.tableGroupsToggleState.find(
-              (item) => item.group === value
-            );
-            return groupState ? !groupState.isClose : true;
-          },
           selectable: true,
           selectableRange: 1,
           selectableRangeColumns: false,
@@ -188,6 +188,13 @@ export default {
           },
           downloadConfig: {},
           groupContextMenu: [],
+          groupBy: this.tableGroupsConfig.groupBy,
+          groupStartOpen: (value) => {
+            const groupState = this.tableEachGroupsToggleState.find(
+              (item) => item.group === value
+            );
+            return groupState ? !groupState.isClose : true;
+          },
           ...this.tableOptions
         };
 
@@ -214,6 +221,34 @@ export default {
               .getElementsByClassName("tabulator-range-selected")[0]
               ?.click();
           }
+
+          const tabulatorElement = this.$refs.tabulatorTableRef;
+
+          if (this.tableGroupsConfig.noGroupByClass) {
+            tabulatorElement.classList.add("no-group-by");
+          } else {
+            tabulatorElement.classList.remove("no-group-by");
+          }
+
+          this.tabulatorInstance.showColumn(this.tableGroupsConfig.showColumn);
+          this.tabulatorInstance.hideColumn(this.tableGroupsConfig.hideColumn);
+          this.tabulatorInstance.setGroupBy(this.tableGroupsConfig.groupBy);
+
+          let typesNotIn = this.tableFiltersState.typesNotIn;
+          let flatFilters = Object.entries(this.tableFiltersState)
+            .filter(([key, value]) => {
+              if (key === "typesNotIn") return false;
+              return Array.isArray(value)
+                ? value.length > 0
+                : Object.keys(value).length > 0;
+            })
+            .map(([key, value]) => value);
+
+          if (typesNotIn.length > 0) {
+            flatFilters.push(...typesNotIn);
+          }
+
+          this.tabulatorInstance.setFilter(flatFilters);
         });
 
         this.previousData = JSON.stringify(this.rowData);
@@ -272,14 +307,14 @@ export default {
           (group, visible) => {
             const groupValue = group.getKey();
 
-            const index = this.tableGroupsToggleState.findIndex(
+            const index = this.tableEachGroupsToggleState.findIndex(
               (item) => item.group === groupValue
             );
 
             if (index !== -1) {
-              this.tableGroupsToggleState[index].isClose = !visible;
+              this.tableEachGroupsToggleState[index].isClose = !visible;
             } else {
-              this.tableGroupsToggleState.push({
+              this.tableEachGroupsToggleState.push({
                 group: groupValue,
                 isClose: !visible
               });
@@ -304,7 +339,7 @@ export default {
     },
 
     // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error.
-    // Hence not using this function.
+    // Hence we need to destroy and recreate table again, when using these methods.
     updateTableData() {
       if (this.tabulatorInstance) {
         this.tabulatorInstance.setData(this.rowData);
@@ -441,6 +476,55 @@ export default {
         this.tabulatorInstance.getGroups().forEach((group) => group.hide());
         this.tabulatorInstance.restoreRedraw();
       }
+    },
+
+    toggleGroups(goToInitial, fromExport) {
+      if (fromExport && this.tableGroupsToggleState == 2) {
+        this.tableGroupsToggleState == 2;
+      } else if (goToInitial === true || this.tableGroupsToggleState == 2) {
+        this.tableGroupsToggleState = 0;
+      } else {
+        const allGroups = this.tabulatorInstance.getGroups();
+        const closedGroupCount = allGroups.filter(
+          (group) => !group._group.visible
+        ).length;
+
+        if (closedGroupCount === allGroups.length) {
+          this.tableGroupsToggleState = 2;
+        } else if (closedGroupCount === 0) {
+          this.tableGroupsToggleState = 1;
+        } else {
+          this.tableGroupsToggleState = 0;
+        }
+      }
+
+      switch (this.tableGroupsToggleState) {
+        case 0:
+          this.showAllGroups();
+          this.tableGroupsConfig.showColumn = "select";
+          this.tableGroupsConfig.hideColumn = "empty-column";
+          this.tableGroupsConfig.groupBy = "request_name";
+          this.tableGroupsConfig.noGroupByClass = false;
+          break;
+
+        case 1:
+          this.hideAllGroups();
+          this.tableGroupsConfig.showColumn = "select";
+          this.tableGroupsConfig.hideColumn = "empty-column";
+          this.tableGroupsConfig.groupBy = "request_name";
+          this.tableGroupsConfig.noGroupByClass = false;
+          break;
+
+        case 2:
+          this.showAllGroups();
+          this.tableGroupsConfig.showColumn = "empty-column";
+          this.tableGroupsConfig.hideColumn = "select";
+          this.tableGroupsConfig.groupBy = false;
+          this.tableGroupsConfig.noGroupByClass = true;
+          break;
+      }
+
+      this.recreateTable();
     },
 
     refreshTable() {
