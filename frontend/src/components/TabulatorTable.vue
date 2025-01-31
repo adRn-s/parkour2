@@ -124,7 +124,18 @@ export default {
             } = firstRange;
             const firstRangeCells = firstRange.getComponent().getCells();
             const allColumns = this.tabulatorInstance.getColumns();
-            const rangeColumns = [];
+            const pastedData = clipboard
+              .trim()
+              .split(/\r?\n/)
+              .map((row) => row.split("\t"));
+            const pastedRowCount = pastedData.length;
+            const pastedColumnCount = Math.max(
+              ...pastedData.map((row) => row.length)
+            );
+            const rangeColumns = allColumns.slice(
+              colStart,
+              colStart + pastedColumnCount
+            );
 
             firstRangeCells.forEach((row, rowIndex) => {
               row.forEach((cell, colIndex) => {
@@ -138,16 +149,10 @@ export default {
               });
             });
 
-            const pastedData = clipboard
-              .trim()
-              .split("\n")
-              .map((row) => row.split("\t"));
-
             let hasValidationErrors = false;
             const batchUpdates = {};
 
             pastedData.forEach((pastedRow, rowOffset) => {
-              console.log(pastedData, pastedRow);
               const tableRow = this.tabulatorInstance.getRowFromPosition(
                 rowStart + rowOffset + 1
               );

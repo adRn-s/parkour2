@@ -1554,7 +1554,7 @@ export default {
 </style>
 
 <!--
-paste behaviour
+smart paste behaviour
 single api call on paste		
 one error at a time			
 export has a single format					
