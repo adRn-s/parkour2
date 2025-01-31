@@ -1555,8 +1555,10 @@ export default {
 
 <!--
 rna_quality not editable
+fix column start and end indexes
+row not going away after quality check pass
 smart paste behaviour
-single api call on paste		
+single api call on paste
 one error at a time			
 export has a single format					
 select rows for export		
