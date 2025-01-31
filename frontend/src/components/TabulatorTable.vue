@@ -109,8 +109,6 @@ export default {
           clipboardCopyRowRange: "range",
           clipboardPasteAction: "range",
           clipboardPasteParser: async (clipboard) => {
-            console.log("Clipboard content:", clipboard);
-
             const selectedRanges = this.tabulatorInstance.getRanges();
             if (!selectedRanges || selectedRanges.length === 0) {
               showNotification("Please select a range before pasting.", "warning");
@@ -119,24 +117,36 @@ export default {
 
             const firstRange = selectedRanges[0]._range;
             const { top: rowStart, bottom: rowEnd, left: colStart, right: colEnd } = firstRange;
+            const firstRangeCells = firstRange.getComponent().getCells();
             const allColumns = this.tabulatorInstance.getColumns();
-            const rangeColumns = allColumns.slice(colStart, colEnd + 1);
+            const rangeColumns = [];
 
-            // Validate range dimensions
+            firstRangeCells.forEach((row, rowIndex) => {
+              row.forEach((cell, colIndex) => {
+                const columnField = cell.getField();
+                const column = allColumns.find(col => col.getField() === columnField);
+                if (column && !rangeColumns.includes(column)) {
+                  rangeColumns.push(column);
+                }
+              });
+            });
+
             const pastedData = clipboard.split("\n").map(row => row.split("\t"));
             if (pastedData.length > (rowEnd - rowStart + 1) || pastedData[0].length > (colEnd - colStart + 1)) {
-              showNotification("Pasted data exceeds selected range", "warning");
+              showNotification("Pasted data exceeds selected range.", "warning");
               return [];
             }
 
-            // Prepare batch update variables
-            const batchUpdates = [];
             let hasValidationErrors = false;
+            const batchUpdates = {};
 
-            // Validation Phase 1: Validate each cell
             pastedData.forEach((pastedRow, rowOffset) => {
+              console.log(pastedData, pastedRow)
               const tableRow = this.tabulatorInstance.getRowFromPosition(rowStart + rowOffset + 1);
               if (!tableRow) return;
+
+              const rowData = tableRow.getData();
+              const updatedRow = { ...rowData };
 
               pastedRow.forEach((cellValue, colOffset) => {
                 const column = rangeColumns[colOffset];
@@ -145,69 +155,34 @@ export default {
                 const field = column.getField();
                 const columnDef = column.getDefinition();
                 const cell = tableRow.getCell(field);
-                const rowData = tableRow.getData();
 
-                // Skip validation for non-editable cells (disable-editing class)
                 if (columnDef.editor === false || cell.getElement().classList.contains('disable-editing')) {
                   hasValidationErrors = true;
                   showNotification("Editing is not allowed in one or more cells.", "warning");
                   return;
                 }
 
-                // Validate the cell value based on its type (numeric, list, or input)
                 try {
-                  const validatedValue = this.validateCellValue(cellValue, columnDef, rowData);
-                  batchUpdates.push({
-                    pk: rowData.pk,
-                    field,
-                    value: validatedValue,
-                    record_type: rowData.record_type
-                  });
+                  updatedRow[field] = this.validateCellValue(cellValue, columnDef, rowData);
                 } catch (error) {
                   hasValidationErrors = true;
-                  showNotification(`Validation failed: ${error.message}`, "warning");
+                  showNotification(error.message, "error");
                   return;
                 }
               });
-            });
 
-            // If validation errors occurred, stop and notify
+              batchUpdates[rowData.barcode] = updatedRow;
+            });
+            console.log(batchUpdates)
+
             if (hasValidationErrors) {
-              showNotification("Pasting aborted due to validation errors", "error");
               return [];
             }
 
-            // Validation passed, proceed to apply updates
-            console.log("Pasting allowed: Data will now be applied to the selected cells.");
-
-            // Bulk update the table rows
-            this.tabulatorInstance.blockRedraw(); // Prevent table redraws during the batch update
-            batchUpdates.forEach(update => {
-              const row = this.tabulatorInstance.getRow(update.pk);
-              if (row) {
-                row.update({ [update.field]: update.value });
-                console.log(`Updated cell at Row ${update.pk}, Field ${update.field} to ${update.value}`);
-              }
-            });
-            this.tabulatorInstance.restoreRedraw(); // Restore table redraw
-
-            // Send single API call with all updates
-            if (batchUpdates.length > 0) {
-              try {
-                const payload = {
-                  data: JSON.stringify(batchUpdates.map(update => ({
-                    pk: update.pk,
-                    record_type: update.record_type,
-                    [update.field]: update.value
-                  })))
-                };
-                await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
-                showNotification("Bulk update successful", "success");
-              } catch (error) {
-                handleError(error);
-                // Revert changes if API call fails
-                this.tabulatorInstance.setData(this.rowData);
-              }
+            const updatedRowsArray = Object.values(batchUpdates);
+            if (updatedRowsArray.length > 0) {
+              this.tabulatorInstance.updateData(updatedRowsArray);
+              console.log(updatedRowsArray);
             }
 
             return [];
@@ -285,9 +260,12 @@ export default {
         this.tabulatorInstance.on("dataChanged", (updatedData) => {
           const currentData = JSON.stringify(updatedData);
           const previousParsed = JSON.parse(this.previousData);
+          const batchChanges = [];
 
           updatedData.forEach((row, index) => {
             const oldRow = previousParsed[index] || {};
+            const changedFields = {};
+
             Object.keys(row).forEach((key) => {
               if (
                 key !== "selected" &&
@@ -295,23 +273,25 @@ export default {
                 key !== "quality_check"
               ) {
                 if (row[key] !== oldRow[key]) {
-                  const change = {
-                    rowData: row,
-                    updatedData: { field: key, value: row[key] }
-                  };
-
-                  if (this.tableOptions?.onCellValueChanged) {
-                    this.tableOptions.onCellValueChanged(
-                      change.rowData,
-                      change.updatedData
-                    );
-                  }
+                  changedFields[key] = row[key];
                 }
               }
             });
+
+            if (Object.keys(changedFields).length > 0) {
+              batchChanges.push({
+                pk: row.pk,
+                record_type: row.record_type,
+                ...changedFields
+              });
+            }
           });
 
           this.previousData = currentData;
+
+          if (batchChanges.length > 0) {
+            this.tableOptions.onBatchCellValueChanged(batchChanges);
+          }
         });
 
         this.tabulatorInstance.on("columnResized", () => {
@@ -620,7 +600,7 @@ export default {
       switch (editorType) {
         case 'number':
           const numValue = parseFloat(value);
-          if (isNaN(numValue)) throw new Error("Invalid number format");
+          if (isNaN(numValue)) throw new Error("Invalid numeric format, please check!");
           return numValue;
 
         case 'list':
@@ -631,7 +611,7 @@ export default {
             typeof opt === 'object' ? opt.label : opt
           ) || [];
           if (!options.includes(value)) {
-            throw new Error(`Option choices are: \n${optionLabels.join(', ')}`);
+            throw new Error(`Invalid option! valid choices are ➜ \n${optionLabels.join(', ')}.`);
           }
           return value;
 
@@ -640,7 +620,7 @@ export default {
           if (columnDef.validator) {
             const validationResult = columnDef.validator(value);
             if (validationResult !== true) {
-              throw new Error(validationResult || "Invalid data format");
+              throw new Error(validationResult || "Invalid data format, please check!");
             }
           }
           return value;

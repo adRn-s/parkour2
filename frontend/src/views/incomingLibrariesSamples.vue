@@ -167,7 +167,7 @@
     <!-- Main content section with table -->
     <div class="table-container">
       <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="librariesSamplesList" :columnDefs="columnsList"
-        :tableOptions="{ ...tableOptions, onCellValueChanged }" />
+        :tableOptions="{ ...tableOptions, onBatchCellValueChanged }" />
     </div>
 
     <!-- Popup window -->
@@ -249,6 +249,7 @@ export default {
         popupWidth: 600
       },
       tableOptions: {
+        index: "barcode",
         placeholder: "No Libraries and Samples to show.",
         groupHeader: (value, count, data) => {
           const samplesSubmitted = data.some(
@@ -956,8 +957,18 @@ export default {
           operations.push({
             label: "Paste",
             action: (e, cell) => {
+              if (cell.getElement().classList.contains("disable-editing")) {
+                return;
+              }
               navigator.clipboard.readText().then((text) => {
-                cell.setValue(text);
+                try {
+                  const columnDef = cell.getColumn().getDefinition();
+                  const rowData = cell.getRow().getData();
+                  const validatedValue = this.tabulatorInstance.validateCellValue(text, columnDef, rowData);
+                  cell.setValue(validatedValue);
+                } catch (error) {
+                  showNotification(error.message, "error");
+                }
               });
             }
           });
@@ -969,15 +980,17 @@ export default {
             action: (e, cell) => {
               const value = cell.getValue();
               const field = cell.getField();
+              const requestName = cell.getRow().getData().request_name;
               this.tabulatorInstance
                 .getTable()
                 .getRows()
                 .forEach((row) => {
-                  if (
-                    row.getData().request_name ===
-                    cell.getRow().getData().request_name
-                  )
-                    row.getCell(field).setValue(value);
+                  if (row.getData().request_name === requestName) {
+                    const targetCell = row.getCell(field);
+                    if (!targetCell.getElement().classList.contains("disable-editing")) {
+                      targetCell.setValue(value);
+                    }
+                  }
                 });
             }
           });
@@ -1262,23 +1275,12 @@ export default {
           break;
       }
     },
-    async onCellValueChanged(rowData, updatedData) {
+    async onBatchCellValueChanged(batchChanges) {
       try {
         const payload = {
-          data: JSON.stringify([
-            {
-              pk: rowData.pk,
-              record_type: rowData.record_type,
-              [updatedData.field]: updatedData.value
-            }
-          ])
+          data: JSON.stringify(batchChanges),
         };
-
-        await axiosRef.post(
-          `${urlStringStart}/api/incoming_libraries/edit/`,
-          payload
-        );
-        showNotification("Data updated successfully.", "success");
+        await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
       } catch (error) {
         handleError(error);
       }
