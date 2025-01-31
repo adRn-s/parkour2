@@ -1,11 +1,20 @@
 <template>
-  <div ref="tabulatorTableRef"></div>
+  <div id="tabulatorTable" ref="tabulatorTableRef"></div>
 </template>
 
 <script>
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import * as XLSX from "xlsx";
 import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
+import {
+  showNotification,
+  handleError,
+  createAxiosObject,
+  urlStringStartsWith
+} from "../utils/utilities";
+
+const axiosRef = createAxiosObject();
+const urlStringStart = urlStringStartsWith();
 
 export default {
   name: "TabulatorTable",
@@ -61,6 +70,10 @@ export default {
   },
   mounted() {
     this.initializeTable();
+    document.addEventListener("keydown", this.handleKeyDown);
+  },
+  beforeDestroy() {
+    document.removeEventListener("keydown", this.handleKeyDown);
   },
   methods: {
     initializeTable() {
@@ -95,92 +108,108 @@ export default {
           },
           clipboardCopyRowRange: "range",
           clipboardPasteAction: "range",
-          clipboardPasteParser: (clipboard) => {
+          clipboardPasteParser: async (clipboard) => {
             console.log("Clipboard content:", clipboard);
 
             const selectedRanges = this.tabulatorInstance.getRanges();
-            console.log("Selected ranges:", selectedRanges);
-
             if (!selectedRanges || selectedRanges.length === 0) {
-              alert("Please select a range before pasting.");
+              showNotification("Please select a range before pasting.", "warning");
               return [];
             }
 
             const firstRange = selectedRanges[0]._range;
-            console.log("First range:", firstRange);
+            const { top: rowStart, bottom: rowEnd, left: colStart, right: colEnd } = firstRange;
+            const allColumns = this.tabulatorInstance.getColumns();
+            const rangeColumns = allColumns.slice(colStart, colEnd + 1);
 
-            const rowStart = firstRange.top;
-            const rowEnd = firstRange.bottom;
-            const colStart = firstRange.left;
-            const colEnd = firstRange.right;
-
-            console.log("Range bounds:", {
-              rowStart,
-              rowEnd,
-              colStart,
-              colEnd
-            });
-
-            const selectedRowCount = rowEnd - rowStart + 1;
-            const selectedColCount = colEnd - colStart + 1;
-
-            console.log("Selected range dimensions:", {
-              selectedRowCount,
-              selectedColCount
-            });
-
-            const pastedData = clipboard
-              .split("\n")
-              .map((row) => row.split("\t"));
-            console.log("pasted data", pastedData);
-            const numPastedRows = pastedData.length;
-            const numPastedCols = pastedData[0]?.length || 0;
-
-            console.log("Pasted data dimensions:", {
-              numPastedRows,
-              numPastedCols
-            });
-
-            if (
-              numPastedRows > selectedRowCount ||
-              numPastedCols > selectedColCount
-            ) {
-              alert(
-                "Pasted data exceeds the selected range. Please adjust your selection."
-              );
-              console.log(
-                "Pasting canceled: Pasted data dimensions exceed selected range."
-              );
+            // Validate range dimensions
+            const pastedData = clipboard.split("\n").map(row => row.split("\t"));
+            if (pastedData.length > (rowEnd - rowStart + 1) || pastedData[0].length > (colEnd - colStart + 1)) {
+              showNotification("Pasted data exceeds selected range", "warning");
               return [];
             }
 
-            console.log(
-              "Pasting allowed: Data fits within the selected range."
-            );
+            // Prepare batch update variables
+            const batchUpdates = [];
+            let hasValidationErrors = false;
 
-            const allColumns = this.tabulatorInstance.getColumns();
-            const rangeColumns = allColumns.slice(colStart + 2, colEnd + 3);
-            console.log("Range columns:", rangeColumns);
+            // Validation Phase 1: Validate each cell
+            pastedData.forEach((pastedRow, rowOffset) => {
+              const tableRow = this.tabulatorInstance.getRowFromPosition(rowStart + rowOffset + 1);
+              if (!tableRow) return;
 
-            pastedData.forEach((rowData, rowIndex) => {
-              rowData.forEach((cellValue, colIndex) => {
-                const rowIndexInTable = rowStart + rowIndex + 1;
-                const column = rangeColumns[colIndex];
+              pastedRow.forEach((cellValue, colOffset) => {
+                const column = rangeColumns[colOffset];
+                if (!column) return;
 
-                if (column) {
-                  const field = column.getField();
-                  const row =
-                    this.tabulatorInstance.getRowFromPosition(rowIndexInTable);
+                const field = column.getField();
+                const columnDef = column.getDefinition();
+                const cell = tableRow.getCell(field);
+                const rowData = tableRow.getData();
 
-                  if (row && field) {
-                    console.log(
-                      `Updating cell at Row ${rowIndexInTable}, Column ${colIndex}: ${field} = ${cellValue}`
-                    );
-                    row.update({ [field]: Number(cellValue) });
-                  }
+                // Skip validation for non-editable cells (disable-editing class)
+                if (columnDef.editor === false || cell.getElement().classList.contains('disable-editing')) {
+                  hasValidationErrors = true;
+                  showNotification("Editing is not allowed in one or more cells.", "warning");
+                  return;
+                }
+
+                // Validate the cell value based on its type (numeric, list, or input)
+                try {
+                  const validatedValue = this.validateCellValue(cellValue, columnDef, rowData);
+                  batchUpdates.push({
+                    pk: rowData.pk,
+                    field,
+                    value: validatedValue,
+                    record_type: rowData.record_type
+                  });
+                } catch (error) {
+                  hasValidationErrors = true;
+                  showNotification(`Validation failed: ${error.message}`, "warning");
+                  return;
                 }
               });
             });
+
+            // If validation errors occurred, stop and notify
+            if (hasValidationErrors) {
+              showNotification("Pasting aborted due to validation errors", "error");
+              return [];
+            }
+
+            // Validation passed, proceed to apply updates
+            console.log("Pasting allowed: Data will now be applied to the selected cells.");
+
+            // Bulk update the table rows
+            this.tabulatorInstance.blockRedraw(); // Prevent table redraws during the batch update
+            batchUpdates.forEach(update => {
+              const row = this.tabulatorInstance.getRow(update.pk);
+              if (row) {
+                row.update({ [update.field]: update.value });
+                console.log(`Updated cell at Row ${update.pk}, Field ${update.field} to ${update.value}`);
+              }
+            });
+            this.tabulatorInstance.restoreRedraw(); // Restore table redraw
+
+            // Send single API call with all updates
+            if (batchUpdates.length > 0) {
+              try {
+                const payload = {
+                  data: JSON.stringify(batchUpdates.map(update => ({
+                    pk: update.pk,
+                    record_type: update.record_type,
+                    [update.field]: update.value
+                  })))
+                };
+                await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
+                showNotification("Bulk update successful", "success");
+              } catch (error) {
+                handleError(error);
+                // Revert changes if API call fails
+                this.tabulatorInstance.setData(this.rowData);
+              }
+            }
+
             return [];
           },
           dependencies: {
@@ -199,7 +228,7 @@ export default {
         };
 
         this.tabulatorInstance = new Tabulator(
-          this.$refs.tabulatorTableRef,
+          "#tabulatorTable",
           options
         );
 
@@ -222,7 +251,7 @@ export default {
               ?.click();
           }
 
-          const tabulatorElement = this.$refs.tabulatorTableRef;
+          const tabulatorElement = this.getTabulatorElement();
 
           if (this.tableGroupsConfig.noGroupByClass) {
             tabulatorElement.classList.add("no-group-by");
@@ -335,7 +364,7 @@ export default {
     },
 
     getTabulatorElement() {
-      return this.$refs.tabulatorTableRef;
+      return document.getElementById("tabulatorTable");
     },
 
     // Tabulator Bug: When we use table.setData() or table.replaceData(), range paste does not work and gives "No bounds defined for this range" error.
@@ -534,14 +563,88 @@ export default {
     },
 
     recreateTable() {
-      if (this.tabulatorInstance) {
-        this.tabulatorInstance.destroy();
+      const oldTable = document.getElementById("tabulatorTable");
+      const newTable = oldTable.cloneNode(false);
+      oldTable.replaceWith(newTable);
+      this.$nextTick(() => {
         this.initializeTable();
-      }
+      });
     },
 
     getTable() {
       return this.tabulatorInstance;
+    },
+
+    handleKeyDown(event) {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+
+      let selectedRanges = this.tabulatorInstance.getRanges();
+      let selectedRangesData = this.tabulatorInstance.getRangesData();
+
+      let isRangeSelected =
+        selectedRangesData.length > 0 &&
+        (selectedRangesData[0].length > 1 || Object.keys(selectedRangesData[0][0]).length > 1);
+
+      if (!isRangeSelected) return;
+
+      const clearableFields = [
+        "measuring_unit_facility",
+        "measured_value_facility",
+        "sample_volume_facility",
+        "size_distribution_facility",
+        "rna_quality",
+        "gmo_facility",
+        "comments_facility"
+      ];
+
+      let firstRangeCells = selectedRanges[0] ? selectedRanges[0].getCells() : [];
+
+      firstRangeCells.forEach((row) => {
+        row.forEach((cell) => {
+          let columnField = cell.getField();
+          if (clearableFields.includes(columnField)) {
+            cell.setValue(null);
+          }
+        });
+      });
+
+      event.preventDefault();
+    },
+
+    validateCellValue(value, columnDef, rowData) {
+      const editorType = columnDef.editor;
+      const editorParams = typeof columnDef.editorParams === 'function' ?
+        columnDef.editorParams({ getRow: () => ({ getData: () => rowData }) }) :
+        columnDef.editorParams;
+
+      switch (editorType) {
+        case 'number':
+          const numValue = parseFloat(value);
+          if (isNaN(numValue)) throw new Error("Invalid number format");
+          return numValue;
+
+        case 'list':
+          const options = editorParams?.values?.map(opt =>
+            typeof opt === 'object' ? opt.value : opt
+          ) || [];
+          const optionLabels = editorParams?.values?.map(opt =>
+            typeof opt === 'object' ? opt.label : opt
+          ) || [];
+          if (!options.includes(value)) {
+            throw new Error(`Option choices are: \n${optionLabels.join(', ')}`);
+          }
+          return value;
+
+        case 'input':
+        default:
+          if (columnDef.validator) {
+            const validationResult = columnDef.validator(value);
+            if (validationResult !== true) {
+              throw new Error(validationResult || "Invalid data format");
+            }
+          }
+          return value;
+      }
     }
   }
 };
@@ -607,6 +710,10 @@ export default {
   padding-left: 10px !important;
 }
 
+.tabulator-cell.tabulator-editable {
+  cursor: pointer;
+}
+
 .tabulator-cell.tabulator-frozen {
   z-index: 1 !important;
 }
@@ -624,6 +731,10 @@ export default {
 .tabulator-cell.facility-entry-column {
   background-color: #c4ecc2;
   color: #388e3c;
+}
+
+.tabulator-cell.facility-entry-column.disable-editing {
+  background-color: #b6dbb4;
 }
 
 .tabulator-col {

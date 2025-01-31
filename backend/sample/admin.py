@@ -103,6 +103,7 @@ class SampleAdmin(admin.ModelAdmin):
                 "fields": (
                     "measuring_unit_facility",
                     "measured_value_facility",
+                    "gmo_facility"
                     "dilution_factor",
                     "sample_volume_facility",
                     "amount_facility",

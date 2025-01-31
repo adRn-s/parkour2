@@ -106,6 +106,7 @@ class SampleSerializer(BaseSerializer):
             "rna_quality",
             "rna_quality_facility",
             "gmo",
+            "gmo_facility",
             "biosafety_level",
         )
         extra_kwargs = {
@@ -114,6 +115,7 @@ class SampleSerializer(BaseSerializer):
                 "nucleic_acid_type": {"required": False},
                 "rna_quality": {"required": False},
                 "gmo": {"required": False},
+                "gmo_facility": {"required": False},
                 "biosafety_level": {"required": False},
             },
         }
