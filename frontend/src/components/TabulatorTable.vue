@@ -133,8 +133,8 @@ export default {
               ...pastedData.map((row) => row.length)
             );
             const rangeColumns = allColumns.slice(
-              colStart,
-              colStart + pastedColumnCount
+              colStart + 1,
+              colStart + 1 + pastedColumnCount
             );
 
             firstRangeCells.forEach((row, rowIndex) => {

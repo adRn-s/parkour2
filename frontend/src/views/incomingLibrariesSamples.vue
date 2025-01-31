@@ -1554,6 +1554,7 @@ export default {
 </style>
 
 <!--
+rna_quality not editable
 smart paste behaviour
 single api call on paste		
 one error at a time			
