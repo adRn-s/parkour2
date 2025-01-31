@@ -6,8 +6,8 @@ const toast = useToast();
 
 export function showNotification(content, type) {
   let options = {
-    timeout: 3000,
-    position: "top-right",
+    timeout: 5000,
+    position: "top-right"
   };
 
   if (type === "info") toast.info(content, options);
@@ -58,7 +58,7 @@ export function createAxiosObject() {
     withCredentials: true,
     headers: {
       "content-type": "application/json",
-      "X-CSRFToken": Cookies.get("csrftoken"),
-    },
+      "X-CSRFToken": Cookies.get("csrftoken")
+    }
   });
 }

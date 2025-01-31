@@ -48,8 +48,6 @@ export default {
       },
       tableGroupsToggleState: 0,
       tableGroupsConfig: {
-        showColumn: "select",
-        hideColumn: "empty-column",
         groupBy: "request_name",
         noGroupByClass: false
       },
@@ -70,7 +68,6 @@ export default {
   },
   mounted() {
     this.initializeTable();
-    document.addEventListener("keydown", this.handleKeyDown);
   },
   beforeDestroy() {
     document.removeEventListener("keydown", this.handleKeyDown);
@@ -98,7 +95,7 @@ export default {
           selectableRangeColumns: false,
           selectableRangeRows: false,
           selectableRangeClearCells: false,
-          editTriggerEvent: "click",
+          editTriggerEvent: "dblclick",
           clipboard: true,
           clipboardCopyStyled: false,
           clipboardCopyConfig: {
@@ -111,12 +108,20 @@ export default {
           clipboardPasteParser: async (clipboard) => {
             const selectedRanges = this.tabulatorInstance.getRanges();
             if (!selectedRanges || selectedRanges.length === 0) {
-              showNotification("Please select a range before pasting.", "warning");
+              showNotification(
+                "Please select a range before pasting.",
+                "warning"
+              );
               return [];
             }
 
             const firstRange = selectedRanges[0]._range;
-            const { top: rowStart, bottom: rowEnd, left: colStart, right: colEnd } = firstRange;
+            const {
+              top: rowStart,
+              bottom: rowEnd,
+              left: colStart,
+              right: colEnd
+            } = firstRange;
             const firstRangeCells = firstRange.getComponent().getCells();
             const allColumns = this.tabulatorInstance.getColumns();
             const rangeColumns = [];
@@ -124,25 +129,28 @@ export default {
             firstRangeCells.forEach((row, rowIndex) => {
               row.forEach((cell, colIndex) => {
                 const columnField = cell.getField();
-                const column = allColumns.find(col => col.getField() === columnField);
+                const column = allColumns.find(
+                  (col) => col.getField() === columnField
+                );
                 if (column && !rangeColumns.includes(column)) {
                   rangeColumns.push(column);
                 }
               });
             });
 
-            const pastedData = clipboard.split("\n").map(row => row.split("\t"));
-            if (pastedData.length > (rowEnd - rowStart + 1) || pastedData[0].length > (colEnd - colStart + 1)) {
-              showNotification("Pasted data exceeds selected range.", "warning");
-              return [];
-            }
+            const pastedData = clipboard
+              .trim()
+              .split("\n")
+              .map((row) => row.split("\t"));
 
             let hasValidationErrors = false;
             const batchUpdates = {};
 
             pastedData.forEach((pastedRow, rowOffset) => {
-              console.log(pastedData, pastedRow)
-              const tableRow = this.tabulatorInstance.getRowFromPosition(rowStart + rowOffset + 1);
+              console.log(pastedData, pastedRow);
+              const tableRow = this.tabulatorInstance.getRowFromPosition(
+                rowStart + rowOffset + 1
+              );
               if (!tableRow) return;
 
               const rowData = tableRow.getData();
@@ -156,14 +164,24 @@ export default {
                 const columnDef = column.getDefinition();
                 const cell = tableRow.getCell(field);
 
-                if (columnDef.editor === false || cell.getElement().classList.contains('disable-editing')) {
+                if (
+                  columnDef.editor === false ||
+                  cell.getElement().classList.contains("disable-editing")
+                ) {
                   hasValidationErrors = true;
-                  showNotification("Editing is not allowed in one or more cells.", "warning");
+                  showNotification(
+                    "Editing is not allowed in one or more cells.",
+                    "warning"
+                  );
                   return;
                 }
 
                 try {
-                  updatedRow[field] = this.validateCellValue(cellValue, columnDef, rowData);
+                  updatedRow[field] = this.validateCellValue(
+                    cellValue,
+                    columnDef,
+                    rowData
+                  );
                 } catch (error) {
                   hasValidationErrors = true;
                   showNotification(error.message, "error");
@@ -173,7 +191,7 @@ export default {
 
               batchUpdates[rowData.barcode] = updatedRow;
             });
-            console.log(batchUpdates)
+            console.log(batchUpdates);
 
             if (hasValidationErrors) {
               return [];
@@ -202,12 +220,11 @@ export default {
           ...this.tableOptions
         };
 
-        this.tabulatorInstance = new Tabulator(
-          "#tabulatorTable",
-          options
-        );
+        this.tabulatorInstance = new Tabulator("#tabulatorTable", options);
 
         this.tabulatorInstance.on("tableBuilt", () => {
+          document.addEventListener("keydown", this.handleKeyDown);
+
           if (
             this.tableRangeBoundsState.start &&
             this.tableRangeBoundsState.end
@@ -234,8 +251,6 @@ export default {
             tabulatorElement.classList.remove("no-group-by");
           }
 
-          this.tabulatorInstance.showColumn(this.tableGroupsConfig.showColumn);
-          this.tabulatorInstance.hideColumn(this.tableGroupsConfig.hideColumn);
           this.tabulatorInstance.setGroupBy(this.tableGroupsConfig.groupBy);
 
           let typesNotIn = this.tableFiltersState.typesNotIn;
@@ -273,7 +288,7 @@ export default {
                 key !== "quality_check"
               ) {
                 if (row[key] !== oldRow[key]) {
-                  changedFields[key] = row[key];
+                  changedFields[key] = row[key] === "" ? null : row[key];
                 }
               }
             });
@@ -334,7 +349,7 @@ export default {
               const firstRow = rows[0];
               const cells = firstRow.getCells();
               if (cells.length > 0) {
-                const topLeftCell = cells[1];
+                const topLeftCell = cells[0];
                 this.tabulatorInstance.addRange(topLeftCell, topLeftCell);
               }
             }
@@ -360,8 +375,6 @@ export default {
         this.tabulatorInstance.setColumns(this.columnDefs);
         this.getTabulatorElement().classList.remove("no-group-by");
         this.showAllGroups();
-        this.tabulatorInstance.showColumn("select");
-        this.tabulatorInstance.hideColumn("empty-column");
         this.tabulatorInstance.setGroupBy("request_name");
         this.tableRangeBoundsState = {
           start: null,
@@ -510,24 +523,18 @@ export default {
       switch (this.tableGroupsToggleState) {
         case 0:
           this.showAllGroups();
-          this.tableGroupsConfig.showColumn = "select";
-          this.tableGroupsConfig.hideColumn = "empty-column";
           this.tableGroupsConfig.groupBy = "request_name";
           this.tableGroupsConfig.noGroupByClass = false;
           break;
 
         case 1:
           this.hideAllGroups();
-          this.tableGroupsConfig.showColumn = "select";
-          this.tableGroupsConfig.hideColumn = "empty-column";
           this.tableGroupsConfig.groupBy = "request_name";
           this.tableGroupsConfig.noGroupByClass = false;
           break;
 
         case 2:
           this.showAllGroups();
-          this.tableGroupsConfig.showColumn = "empty-column";
-          this.tableGroupsConfig.hideColumn = "select";
           this.tableGroupsConfig.groupBy = false;
           this.tableGroupsConfig.noGroupByClass = true;
           break;
@@ -556,71 +563,118 @@ export default {
     },
 
     handleKeyDown(event) {
-      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      const isDeleteOrBackspace =
+        event.key === "Delete" || event.key === "Backspace";
+      const isPrintableKey =
+        event.key.length === 1 &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey;
 
       let selectedRanges = this.tabulatorInstance.getRanges();
       let selectedRangesData = this.tabulatorInstance.getRangesData();
-
       let isRangeSelected =
         selectedRangesData.length > 0 &&
-        (selectedRangesData[0].length > 1 || Object.keys(selectedRangesData[0][0]).length > 1);
+        (selectedRangesData[0].length > 1 ||
+          Object.keys(selectedRangesData[0][0]).length > 1);
 
-      if (!isRangeSelected) return;
+      if (isDeleteOrBackspace) {
+        if (!isRangeSelected) return;
+        const clearableFields = [
+          "measuring_unit_facility",
+          "measured_value_facility",
+          "sample_volume_facility",
+          "size_distribution_facility",
+          "rna_quality",
+          "gmo_facility",
+          "comments_facility"
+        ];
+        let firstRangeCells = selectedRanges[0]
+          ? selectedRanges[0].getCells()
+          : [];
+        firstRangeCells.forEach((row) => {
+          row.forEach((cell) => {
+            let columnField = cell.getField();
+            let disabledEditing = cell
+              .getElement()
+              .classList.contains("disable-editing");
 
-      const clearableFields = [
-        "measuring_unit_facility",
-        "measured_value_facility",
-        "sample_volume_facility",
-        "size_distribution_facility",
-        "rna_quality",
-        "gmo_facility",
-        "comments_facility"
-      ];
-
-      let firstRangeCells = selectedRanges[0] ? selectedRanges[0].getCells() : [];
-
-      firstRangeCells.forEach((row) => {
-        row.forEach((cell) => {
-          let columnField = cell.getField();
-          if (clearableFields.includes(columnField)) {
-            cell.setValue(null);
-          }
+            if (clearableFields.includes(columnField) && !disabledEditing) {
+              cell.setValue("");
+            }
+          });
         });
-      });
+        event.preventDefault();
+        return;
+      }
 
-      event.preventDefault();
+      if (isPrintableKey) {
+        let firstRangeCells = selectedRanges[0]
+          ? selectedRanges[0].getCells()
+          : [];
+        let firstCell = firstRangeCells[0][0];
+
+        if (
+          document.activeElement &&
+          document.activeElement.tagName === "INPUT"
+        ) {
+          return;
+        }
+        if (firstCell) {
+          let disabledEditing = firstCell
+            .getElement()
+            .classList.contains("disable-editing");
+          if (disabledEditing) {
+            showNotification("Editing is disabled for this field.", "warning");
+            return;
+          }
+          firstCell.edit();
+        }
+      }
     },
 
     validateCellValue(value, columnDef, rowData) {
       const editorType = columnDef.editor;
-      const editorParams = typeof columnDef.editorParams === 'function' ?
-        columnDef.editorParams({ getRow: () => ({ getData: () => rowData }) }) :
-        columnDef.editorParams;
+      const editorParams =
+        typeof columnDef.editorParams === "function"
+          ? columnDef.editorParams({
+              getRow: () => ({ getData: () => rowData })
+            })
+          : columnDef.editorParams;
 
       switch (editorType) {
-        case 'number':
+        case "number":
           const numValue = parseFloat(value);
-          if (isNaN(numValue)) throw new Error("Invalid numeric format, please check!");
+          if (isNaN(numValue))
+            throw new Error("Invalid numeric format, please check!");
           return numValue;
 
-        case 'list':
-          const options = editorParams?.values?.map(opt =>
-            typeof opt === 'object' ? opt.value : opt
-          ) || [];
-          const optionLabels = editorParams?.values?.map(opt =>
-            typeof opt === 'object' ? opt.label : opt
-          ) || [];
+        case "list":
+          const options =
+            editorParams?.values?.map((opt) =>
+              typeof opt === "object" ? opt.value : opt
+            ) || [];
+          const optionLabels =
+            editorParams?.values?.map((opt) =>
+              typeof opt === "object" ? opt.label : opt
+            ) || [];
           if (!options.includes(value)) {
-            throw new Error(`Invalid option! valid choices are ➜ \n${optionLabels.join(', ')}.`);
+            throw new Error(
+              `Invalid option! valid choices are ➜ \n${optionLabels.join(
+                ", "
+              )}.`
+            );
           }
           return value;
 
-        case 'input':
+        case "input":
         default:
           if (columnDef.validator) {
             const validationResult = columnDef.validator(value);
             if (validationResult !== true) {
-              throw new Error(validationResult || "Invalid data format, please check!");
+              throw new Error(
+                validationResult || "Invalid data format, please check!"
+              );
             }
           }
           return value;
@@ -774,8 +828,7 @@ export default {
   border-top: 1px solid grey !important;
 }
 
-.checkbox-column:not(.tabulator-col),
-.empty-column:not(.tabulator-col) {
+.checkbox-column:not(.tabulator-col) {
   padding: 12px 8px !important;
 }
 </style>
