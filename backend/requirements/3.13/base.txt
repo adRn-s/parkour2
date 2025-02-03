@@ -29,7 +29,7 @@ django-authtools @ git+https://github.com/adRn-s/django-authtools@a3284c976719bd
     # via -r backend/requirements/base.in
 django-extensions==3.2.3
     # via -r backend/requirements/base.in
-django-import-export==4.3.4
+django-import-export==4.3.5
     # via -r backend/requirements/base.in
 django-linear-migrations==2.16.0
     # via -r backend/requirements/base.in
@@ -45,7 +45,7 @@ drf-spectacular==0.28.0
     # via -r backend/requirements/base.in
 et-xmlfile==2.0.0
     # via openpyxl
-fonttools==4.55.6
+fonttools==4.55.8
     # via fpdf2
 fpdf2==2.8.2
     # via -r backend/requirements/base.in
@@ -79,7 +79,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-docx==1.1.2
     # via -r backend/requirements/base.in
-pytz==2024.2
+pytz==2025.1
     # via pandas
 pyyaml==6.0.2
     # via drf-spectacular
