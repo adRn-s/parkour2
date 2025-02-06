@@ -6,15 +6,7 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import * as XLSX from "xlsx";
 import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";
-import {
-  showNotification,
-  handleError,
-  createAxiosObject,
-  urlStringStartsWith
-} from "../utils/utilities";
-
-const axiosRef = createAxiosObject();
-const urlStringStart = urlStringStartsWith();
+import { showNotification } from "../utils/utilities";
 
 export default {
   name: "TabulatorTable",
@@ -128,13 +120,12 @@ export default {
               .trim()
               .split(/\r?\n/)
               .map((row) => row.split("\t"));
-            const pastedRowCount = pastedData.length;
             const pastedColumnCount = Math.max(
               ...pastedData.map((row) => row.length)
             );
             const rangeColumns = allColumns.slice(
-              colStart + 1,
-              colStart + 1 + pastedColumnCount
+              colStart,
+              colStart + pastedColumnCount
             );
 
             firstRangeCells.forEach((row, rowIndex) => {
@@ -580,8 +571,15 @@ export default {
       let selectedRangesData = this.tabulatorInstance.getRangesData();
       let isRangeSelected =
         selectedRangesData.length > 0 &&
-        (selectedRangesData[0].length > 1 ||
-          Object.keys(selectedRangesData[0][0]).length > 1);
+        (selectedRangesData[0].length > 0 ||
+          Object.keys(selectedRangesData[0][0]).length > 0);
+
+      if (
+        document.activeElement &&
+        document.activeElement.tagName === "INPUT"
+      ) {
+        return;
+      }
 
       if (isDeleteOrBackspace) {
         if (!isRangeSelected) return;
@@ -618,13 +616,6 @@ export default {
           ? selectedRanges[0].getCells()
           : [];
         let firstCell = firstRangeCells[0][0];
-
-        if (
-          document.activeElement &&
-          document.activeElement.tagName === "INPUT"
-        ) {
-          return;
-        }
         if (firstCell) {
           let disabledEditing = firstCell
             .getElement()
@@ -634,6 +625,12 @@ export default {
             return;
           }
           firstCell.edit();
+
+          const input = document.activeElement;
+          if (input && input.tagName === "INPUT") {
+            input.value = "";
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }
         }
       }
     },
@@ -650,9 +647,10 @@ export default {
       switch (editorType) {
         case "number":
           const numValue = parseFloat(value);
-          if (isNaN(numValue))
+          if (isNaN(numValue) && value !== "") {
             throw new Error("Invalid numeric format, please check!");
-          return numValue;
+          }
+          return value == "" ? "" : numValue;
 
         case "list":
           const options =

@@ -904,6 +904,12 @@ export default {
               headerVertical: true,
               visible: true,
               editor: "number",
+              editorParams: {
+                min: 1,
+                max: 11,
+                step: 0.1
+              },
+              validator: ["min:1", "max:11"],
               cssClass: "facility-entry-column",
               contextMenu: () => this.cellContextMenu(true, true, true),
               cellEditing: (cell) => {
@@ -1554,15 +1560,17 @@ export default {
 </style>
 
 <!--
-rna_quality not editable
+store width for copy in store
+arrow key nevigation not working when editing, clicking on the editor to change position closes the editor
+min max validation for editing pasting, all fields
 fix column start and end indexes
 row not going away after quality check pass
 smart paste behaviour
-single api call on paste
-one error at a time			
-export has a single format					
-select rows for export		
+export has a single format
+select rows for export
 
+one error at a time		
+single api call on paste
 when recreating the table, do white animation
 migrations fix
 make the component modular
