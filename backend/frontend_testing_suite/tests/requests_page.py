@@ -235,9 +235,9 @@ def test_requests_page(page: Page):
                 ).to_contain_text(str(row[2]))
                 assert page.locator(
                     "#librariesTable-body>div>div>table>tbody>tr>td:nth-child(10)>div"
-                ).nth(index + 1).inner_text() in str(
-                    row[3]
-                ), f"Values are not matching."
+                ).nth(index + 1).inner_text() in str(row[3]), (
+                    f"Values are not matching."
+                )
                 expect(
                     page.locator(
                         "#librariesTable-body>div>div>table>tbody>tr>td:nth-child(12)>div"

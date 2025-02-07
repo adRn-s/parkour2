@@ -130,7 +130,7 @@ class MetadataExporterViewSet(viewsets.ViewSet):
                 "title": study_title,
                 "study_type": study_type,
                 "study_abstract": study_abstract,
-                "alias": f'study_{study_title.replace(" ", "_")}',
+                "alias": f"study_{study_title.replace(' ', '_')}",
             },
         )
 
@@ -183,7 +183,7 @@ class MetadataExporterViewSet(viewsets.ViewSet):
                 "title": study_title,
                 "study_type": study_type,
                 "study_abstract": study_abstract,
-                "alias": f'study_{study_title.replace(" ", "_")}',
+                "alias": f"study_{study_title.replace(' ', '_')}",
             },
         )
 
