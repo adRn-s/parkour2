@@ -43,7 +43,8 @@ export default {
         groupBy: "request_name",
         noGroupByClass: false
       },
-      tableEachGroupsToggleState: []
+      tableEachGroupsToggleState: [],
+      tableColumnWidths: {},
     };
   },
   watch: {
@@ -240,7 +241,6 @@ export default {
           }
 
           const tabulatorElement = this.getTabulatorElement();
-
           if (this.tableGroupsConfig.noGroupByClass) {
             tabulatorElement.classList.add("no-group-by");
           } else {
@@ -264,6 +264,14 @@ export default {
           }
 
           this.tabulatorInstance.setFilter(flatFilters);
+
+          const columns = this.tabulatorInstance.getColumns();
+          columns.forEach((column) => {
+            const field = column.getField();
+            if (this.tableColumnWidths[field]) {
+              column.setWidth(this.tableColumnWidths[field]);
+            }
+          });
         });
 
         this.previousData = JSON.stringify(this.rowData);
@@ -305,7 +313,10 @@ export default {
           }
         });
 
-        this.tabulatorInstance.on("columnResized", () => {
+        this.tabulatorInstance.on("columnResized", (column) => {
+          const field = column.getField();
+          const width = column.getWidth();
+          this.tableColumnWidths[field] = width;
           this.refreshTable();
         });
 
@@ -640,8 +651,8 @@ export default {
       const editorParams =
         typeof columnDef.editorParams === "function"
           ? columnDef.editorParams({
-              getRow: () => ({ getData: () => rowData })
-            })
+            getRow: () => ({ getData: () => rowData })
+          })
           : columnDef.editorParams;
 
       switch (editorType) {
