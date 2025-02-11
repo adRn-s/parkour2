@@ -215,6 +215,8 @@
 
 <script lang="jsx">
 import TabulatorTable from "../components/TabulatorTable.vue";
+import { TabulatorFull as Tabulator } from "tabulator-tables";
+import * as XLSX from "xlsx";
 import {
   showNotification,
   handleError,
@@ -1054,9 +1056,9 @@ export default {
         this.fakeLoading = false;
       }, 300);
     },
-    toggleGroups(goToInitial, fromExport) {
+    toggleGroups(goToInitial) {
       this.fakeLoadingStart();
-      this.tabulatorInstance.toggleGroups(goToInitial, fromExport);
+      this.tabulatorInstance.toggleGroups(goToInitial);
       this.fakeLoadingStop();
     },
     toggleAdvancedFilters() {
@@ -1333,12 +1335,48 @@ export default {
       const year = today.getFullYear();
       const formattedDate = `${day}_${month}_${year}`;
       const filename = `Incoming_Libraries_&_Samples_${formattedDate}.xlsx`;
-
-      this.toggleGroups(true, true);
+      const tempContainer = document.createElement("div");
+      const exportColumns = this.columnsList
+        .filter((col) => col.field !== "selected")
+        .map((col) => ({ ...col }));
+      let exportRows = this.librariesSamplesList.filter(row => row.selected === true);
+      this.fakeLoadingStart();
+      exportColumns.unshift({
+        title: "Request Name",
+        field: "request_name",
+        visible: true,
+      });
+      if (exportRows.length === 0) {
+        exportRows = this.librariesSamplesList;
+      }
+      document.body.appendChild(tempContainer);
+      const tempTabulator = new Tabulator(tempContainer, {
+        data: exportRows,
+        columns: exportColumns,
+        placeholder: "No Libraries and Samples to show.",
+        dependencies: {
+          XLSX: XLSX
+        },
+        downloadConfig: {
+          columnHeaders: true,
+          columnGroups: true,
+          rowGroups: true,
+          columnCalcs: true,
+          dataTree: true,
+        },
+      });
+      this.fakeLoadingStop();
       setTimeout(() => {
-        this.tabulatorInstance.getTable().download("xlsx", filename, {
-          sheetName: "Incoming Libraries & Samples"
-        });
+        try {
+          tempTabulator.download("xlsx", filename, {
+            sheetName: "Incoming Libraries & Samples",
+          });
+        } catch (error) {
+          showNotification("Failed to export the data, please try again.", "error");
+        } finally {
+          tempTabulator.destroy();
+          document.body.removeChild(tempContainer);
+        }
       }, 300);
     },
     ellipsisContainer(text, boldText) {
@@ -1461,8 +1499,8 @@ export default {
 <!--
 fix column start and end indexes
 smart paste behaviour
-export has a single format
-select rows for export
+export columns increase width
+in last toggle view add requst name
 
 one error at a time		
 single api call on paste

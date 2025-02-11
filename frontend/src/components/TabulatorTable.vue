@@ -514,8 +514,8 @@ export default {
       }
     },
 
-    toggleGroups(goToInitial, fromExport) {
-      if (fromExport && this.tableGroupsToggleState == 2) {
+    toggleGroups(goToInitial) {
+      if (this.tableGroupsToggleState == 2) {
         this.tableGroupsToggleState == 2;
       } else if (goToInitial === true || this.tableGroupsToggleState == 2) {
         this.tableGroupsToggleState = 0;
