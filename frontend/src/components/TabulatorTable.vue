@@ -330,7 +330,14 @@ export default {
         });
 
         this.tabulatorInstance.on("clipboardCopied", () => {
+          this.tableOptions.fakeLoadingStart();
           this.recreateTable();
+          this.tableOptions.fakeLoadingStop();
+        });
+
+        this.tabulatorInstance.on("clipboardPasted", () => {
+          this.tableOptions.fakeLoadingStart();
+          this.tableOptions.fakeLoadingStop();
         });
 
         this.tabulatorInstance.on(
@@ -648,28 +655,34 @@ export default {
 
     validateCellValue(value, columnDef, rowData) {
       const editorType = columnDef.editor;
-      const editorParams =
-        typeof columnDef.editorParams === "function"
-          ? columnDef.editorParams({
-            getRow: () => ({ getData: () => rowData })
-          })
-          : columnDef.editorParams;
 
       switch (editorType) {
         case "number":
           const numValue = parseFloat(value);
+          const editorParamsNumber = columnDef.editorParams || {};
+          const min = editorParamsNumber.min;
+          const max = editorParamsNumber.max;
           if (isNaN(numValue) && value !== "") {
             throw new Error("Invalid numeric format, please check!");
+          }
+          if ((min !== undefined && numValue < min) || (max !== undefined && numValue > max)) {
+            throw new Error(`Value must be between ${min} and ${max}.`);
           }
           return value == "" ? "" : numValue;
 
         case "list":
+          const editorParamsList =
+            typeof columnDef.editorParams === "function"
+              ? columnDef.editorParams({
+                getRow: () => ({ getData: () => rowData })
+              })
+              : columnDef.editorParams;
           const options =
-            editorParams?.values?.map((opt) =>
+            editorParamsList?.values?.map((opt) =>
               typeof opt === "object" ? opt.value : opt
             ) || [];
           const optionLabels =
-            editorParams?.values?.map((opt) =>
+            editorParamsList?.values?.map((opt) =>
               typeof opt === "object" ? opt.label : opt
             ) || [];
           if (!options.includes(value)) {

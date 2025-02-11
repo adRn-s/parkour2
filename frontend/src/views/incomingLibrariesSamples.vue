@@ -165,7 +165,7 @@
     <!-- Main content section with table -->
     <div class="table-container">
       <TabulatorTable v-if="!loading" ref="tabulatorTableRef" :rowData="librariesSamplesList" :columnDefs="columnsList"
-        :tableOptions="{ ...tableOptions, onBatchCellValueChanged }" />
+        :tableOptions="{ ...tableOptions, onBatchCellValueChanged, fakeLoadingStart, fakeLoadingStop }" />
     </div>
 
     <!-- Popup window -->
@@ -934,13 +934,9 @@ export default {
     cellContextMenu(allowCopy, allowPaste, allowApplyToAll) {
       const operations = [];
       let isRangeSelected = false;
-      let selectedRanges = this.tabulatorInstance.getTable().getRanges();
       let selectedRangesData = this.tabulatorInstance
         .getTable()
         .getRangesData();
-      let firstRangeCells = selectedRanges[0]
-        ? selectedRanges[0].getCells()
-        : [];
       if (selectedRangesData.length > 0) {
         let firstRangeFields = Object.keys(selectedRangesData[0][0]);
         isRangeSelected =
@@ -1050,12 +1046,18 @@ export default {
         this.showSelectColumns = false;
       }
     },
-    toggleGroups(goToInitial, fromExport) {
+    fakeLoadingStart() {
       this.fakeLoading = true;
-      this.tabulatorInstance.toggleGroups(goToInitial, fromExport);
+    },
+    fakeLoadingStop() {
       setTimeout(() => {
         this.fakeLoading = false;
       }, 300);
+    },
+    toggleGroups(goToInitial, fromExport) {
+      this.fakeLoadingStart();
+      this.tabulatorInstance.toggleGroups(goToInitial, fromExport);
+      this.fakeLoadingStop();
     },
     toggleAdvancedFilters() {
       this.showAdvancedFilters = !this.showAdvancedFilters;
@@ -1070,7 +1072,7 @@ export default {
       }
     },
     toggleColumnVisibility(column, isMainColumn) {
-      this.fakeLoading = true;
+      this.fakeLoadingStart();
       let updatedColumns;
 
       if (isMainColumn) {
@@ -1099,9 +1101,7 @@ export default {
 
       localStorage.setItem("columnSettings", JSON.stringify(updatedColumns));
       this.columnsList = updatedColumns;
-      setTimeout(() => {
-        this.fakeLoading = false;
-      }, 300);
+      this.fakeLoadingStop();
     },
     handleGroupButtonClick(event, groupValue, action) {
       event.stopPropagation();
@@ -1160,7 +1160,7 @@ export default {
             }</span>, Confirm your action by pressing the <span style="font-weight: bold">Yes</span> button.`;
           let onYesSS = () => {
             try {
-              this.fakeLoading = true;
+              this.fakeLoadingStart();
               const payload = {
                 data: JSON.stringify({
                   result: newSamplesSubmittedState
@@ -1183,9 +1183,7 @@ export default {
             } catch (error) {
               handleError(error);
             } finally {
-              setTimeout(() => {
-                this.fakeLoading = false;
-              }, 300);
+              this.fakeLoadingStop();
             }
             this.showPopupWindow = false;
           };
@@ -1307,8 +1305,8 @@ export default {
         handleError(error);
       }
     },
-    qualityCheckChange(groupRows, qualityCheck) {
-      this.fakeLoading = true;
+    async qualityCheckChange(groupRows, qualityCheck) {
+      this.fakeLoadingStart();
       const payload = {
         data: JSON.stringify(
           groupRows.map((row) => ({
@@ -1318,21 +1316,15 @@ export default {
           }))
         )
       };
-      axiosRef
-        .post(`${urlStringStart}/api/incoming_libraries/edit/`, payload)
-        .then(() => {
-          showNotification(
-            "Quality check status updated successfully.",
-            "success"
-          );
-          this.getLibrariesSamples();
-        })
-        .catch((error) => {
-          handleError(error);
-        });
-      setTimeout(() => {
-        this.fakeLoading = false;
-      }, 300);
+      try {
+        await axiosRef.post(`${urlStringStart}/api/incoming_libraries/edit/`, payload);
+        showNotification("Quality check status updated successfully.", "success");
+        await this.getLibrariesSamples();
+      } catch (error) {
+        handleError(error);
+      } finally {
+        this.fakeLoadingStop();
+      }
     },
     exportToExcel() {
       const today = new Date();
@@ -1467,13 +1459,10 @@ export default {
 </style>
 
 <!--
-min max validation for pasting, all fields
 fix column start and end indexes
-row not going away after quality check pass
 smart paste behaviour
 export has a single format
 select rows for export
-when recreating the table, do white animation
 
 one error at a time		
 single api call on paste
