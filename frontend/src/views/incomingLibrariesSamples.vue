@@ -529,7 +529,9 @@ export default {
           contextMenu: () => this.cellContextMenu(true, false, false),
           formatter: (cell) => {
             const type = cell.getRow().getData().type;
+            const request_name = cell.getRow().getData().request_name;
             const name = cell.getValue();
+            const tableGroupsToggleState = this.tabulatorInstance.getTableGroupsToggleState();
             const bgColor = type === "S" ? "#00800080" : "lightblue";
             return `
                         <div style="padding: 4px 8px; display: flex; align-items: center;">
@@ -547,7 +549,7 @@ export default {
                             ">
                             ${type}
                           </span>
-                          <span title="${name}" style="padding: 8px 0px; font-weight:bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${name}</span>
+                          <span title="${name}" style="padding: 8px 0px; font-weight:bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${(tableGroupsToggleState == 2 ? (request_name + " ➜ ") : ("")) + name}</span>
                         </div>
                       `;
           },
@@ -1500,7 +1502,6 @@ export default {
 fix column start and end indexes
 smart paste behaviour
 export columns increase width
-in last toggle view add requst name
 
 one error at a time		
 single api call on paste

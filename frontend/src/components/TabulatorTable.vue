@@ -514,10 +514,12 @@ export default {
       }
     },
 
+    getTableGroupsToggleState() {
+      return this.tableGroupsToggleState;
+    },
+
     toggleGroups(goToInitial) {
-      if (this.tableGroupsToggleState == 2) {
-        this.tableGroupsToggleState == 2;
-      } else if (goToInitial === true || this.tableGroupsToggleState == 2) {
+      if (goToInitial === true || this.tableGroupsToggleState == 2) {
         this.tableGroupsToggleState = 0;
       } else {
         const allGroups = this.tabulatorInstance.getGroups();
