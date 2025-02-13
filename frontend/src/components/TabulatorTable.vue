@@ -1,5 +1,46 @@
 <template>
   <div id="tabulatorTable" ref="tabulatorTableRef"></div>
+  <!-- Errors window -->
+  <!-- <div v-if="showPopupWindow" class="popup-overlay">
+      <div class="popup-container" :style="{
+        height: popupContents.popupHeight + 'px',
+        width: popupContents.popupWidth + 'px'
+      }">
+        <div class="popup-header">
+          <svg style="display: block" fill="none" width="42px" height="42px" version="1.1"
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g>
+              <path opacity="0.3"
+                d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
+                fill="#323232" />
+              <path
+                d="M3 9.22843V14.7716C3 15.302 3.21071 15.8107 3.58579 16.1858L7.81421 20.4142C8.18929 20.7893 8.69799 21 9.22843 21H14.7716C15.302 21 15.8107 20.7893 16.1858 20.4142L20.4142 16.1858C20.7893 15.8107 21 15.302 21 14.7716V9.22843C21 8.69799 20.7893 8.18929 20.4142 7.81421L16.1858 3.58579C15.8107 3.21071 15.302 3 14.7716 3H9.22843C8.69799 3 8.18929 3.21071 7.81421 3.58579L3.58579 7.81421C3.21071 8.18929 3 8.69799 3 9.22843Z"
+                stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 8V13" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M12 16V15.9888" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </g>
+          </svg>
+          <span class="popup-title">{{ popupContents.popupTitle }}</span>
+          <button class="popup-close-button" @click="showPopupWindow = false">
+            &times;
+          </button>
+        </div>
+        <div class="popup-body">
+          <div v-html="popupContents.popupDescription"></div>
+          <div v-if="popupContents.popupList && popupContents.popupList.length > 0" class="popup-scrollable-content">
+            <ol>
+              <li v-for="item in popupContents.popupList" :key="item">
+                {{ item.barcode + " ➜ " }}
+                <span style="font-weight: bold">{{ item.name }}</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-button" @click="showPopupWindow= false">No</button>
+        </div>
+      </div>
+    </div> -->
 </template>
 
 <script>
@@ -98,106 +139,76 @@ export default {
           },
           clipboardCopyRowRange: "range",
           clipboardPasteAction: "range",
+          clipboardCopyFormatter: function (type, output) {
+            if (type == "plain") {
+              output += "\n";
+            }
+            return output;
+          },
           clipboardPasteParser: async (clipboard) => {
             const selectedRanges = this.tabulatorInstance.getRanges();
-            if (!selectedRanges || selectedRanges.length === 0) {
-              showNotification(
-                "Please select a range before pasting.",
-                "warning"
-              );
+
+            if (!selectedRanges?.length) {
+              showNotification("Please select a range before pasting.", "warning");
               return [];
             }
 
-            const firstRange = selectedRanges[0]._range;
-            const {
-              top: rowStart,
+            const { top: rowStart,
               bottom: rowEnd,
               left: colStart,
-              right: colEnd
-            } = firstRange;
-            const firstRangeCells = firstRange.getComponent().getCells();
-            const allColumns = this.tabulatorInstance.getColumns();
-            const pastedData = clipboard
-              .trim()
-              .split(/\r?\n/)
-              .map((row) => row.split("\t"));
-            const pastedColumnCount = Math.max(
-              ...pastedData.map((row) => row.length)
-            );
-            const rangeColumns = allColumns.slice(
-              colStart,
-              colStart + pastedColumnCount
-            );
-
-            firstRangeCells.forEach((row, rowIndex) => {
-              row.forEach((cell, colIndex) => {
-                const columnField = cell.getField();
-                const column = allColumns.find(
-                  (col) => col.getField() === columnField
-                );
-                if (column && !rangeColumns.includes(column)) {
-                  rangeColumns.push(column);
-                }
-              });
-            });
+              right: colEnd } = selectedRanges[0]._range;
+            const visibleColumns = this.tabulatorInstance.getColumns().filter(col => col._column.visible);
+            const pastedData = clipboard.split(/\r?\n/).map(row => row.split("\t"));
+            const pastedColumnCount = Math.max(...pastedData.map(row => row.length));
+            const rangeColumns = visibleColumns.slice(colStart, colStart + pastedColumnCount);
 
             let hasValidationErrors = false;
             const batchUpdates = {};
 
-            pastedData.forEach((pastedRow, rowOffset) => {
-              const tableRow = this.tabulatorInstance.getRowFromPosition(
-                rowStart + rowOffset + 1
-              );
-              if (!tableRow) return;
+            if (
+              pastedData[pastedData.length - 1].length === 1 &&
+              pastedData[pastedData.length - 1][0] === ""
+            ) {
+              pastedData.pop();
+            }
 
+            let cellNumber = 0;
+            pastedData.forEach((pastedRow, rowOffset) => {
+              const tableRow = this.tabulatorInstance.getRowFromPosition(rowStart + rowOffset + 1);
+              if (!tableRow) return;
+              cellNumber++;
               const rowData = tableRow.getData();
               const updatedRow = { ...rowData };
-
               pastedRow.forEach((cellValue, colOffset) => {
                 const column = rangeColumns[colOffset];
                 if (!column) return;
-
                 const field = column.getField();
                 const columnDef = column.getDefinition();
                 const cell = tableRow.getCell(field);
-
-                if (
-                  columnDef.editor === false ||
-                  cell.getElement().classList.contains("disable-editing")
-                ) {
-                  hasValidationErrors = true;
-                  showNotification(
-                    "Editing is not allowed in one or more cells.",
-                    "warning"
-                  );
+                if (columnDef.editor === false || cell.getElement().classList.contains("disable-editing")) {
+                  hasValidationErrors ||= true;
+                  showNotification("Cell: " + cellNumber + " | " + "Editing is not allowed in this cell.", "warning");
                   return;
                 }
 
                 try {
-                  updatedRow[field] = this.validateCellValue(
-                    cellValue,
-                    columnDef,
-                    rowData
-                  );
+                  updatedRow[field] = this.validateCellValue(cellValue, columnDef, rowData);
                 } catch (error) {
-                  hasValidationErrors = true;
-                  showNotification(error.message, "error");
-                  return;
+                  hasValidationErrors ||= true;
+                  showNotification("Cell: " + cellNumber + " | " + error.message, "error");
                 }
               });
 
               batchUpdates[rowData.barcode] = updatedRow;
             });
-            console.log(batchUpdates);
 
             if (hasValidationErrors) {
               return [];
             }
 
             const updatedRowsArray = Object.values(batchUpdates);
-            if (updatedRowsArray.length > 0) {
+            if (updatedRowsArray.length) {
               this.tabulatorInstance.updateData(updatedRowsArray);
-              console.log(updatedRowsArray);
             }
 
             return [];

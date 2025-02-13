@@ -1499,12 +1499,10 @@ export default {
 </style>
 
 <!--
-fix column start and end indexes
+single cell paste, filter by request_name
+paste error window
 smart paste behaviour
-export columns increase width
 
-one error at a time		
-single api call on paste
 migrations fix
 make the component modular
 show hover tooltips with use of a library
