@@ -147,68 +147,86 @@ export default {
           },
           clipboardPasteParser: async (clipboard) => {
             const selectedRanges = this.tabulatorInstance.getRanges();
-
             if (!selectedRanges?.length) {
               showNotification("Please select a range before pasting.", "warning");
               return [];
             }
 
-            const { top: rowStart,
-              bottom: rowEnd,
-              left: colStart,
-              right: colEnd } = selectedRanges[0]._range;
+            const { top: rowStart, bottom: rowEnd, left: colStart, right: colEnd } = selectedRanges[0]._range;
             const visibleColumns = this.tabulatorInstance.getColumns().filter(col => col._column.visible);
-            const pastedData = clipboard.split(/\r?\n/).map(row => row.split("\t"));
+            let pastedData = clipboard.split(/\r?\n/).map(row => row.split("\t"));
+            if (pastedData[pastedData.length - 1]?.length === 1 && pastedData[pastedData.length - 1][0] === "")
+              pastedData.pop();
+
             const pastedColumnCount = Math.max(...pastedData.map(row => row.length));
             const rangeColumns = visibleColumns.slice(colStart, colStart + pastedColumnCount);
-
-            let hasValidationErrors = false;
             const batchUpdates = {};
+            const isSingleCell = rowStart === rowEnd && colStart === colEnd;
+            let targetRequestName = null;
+            let hasValidationErrors = false;
+            let changedRows = new Set();
+            let changedCols = new Set();
+            let cellNumber = 0;
 
-            if (
-              pastedData[pastedData.length - 1].length === 1 &&
-              pastedData[pastedData.length - 1][0] === ""
-            ) {
-              pastedData.pop();
+            if (isSingleCell) {
+              const selectedRow = this.tabulatorInstance.getRowFromPosition(rowStart + 1);
+              targetRequestName = selectedRow?.getData().request_name;
             }
 
-            let cellNumber = 0;
             pastedData.forEach((pastedRow, rowOffset) => {
               const tableRow = this.tabulatorInstance.getRowFromPosition(rowStart + rowOffset + 1);
               if (!tableRow) return;
+              if (isSingleCell && tableRow.getData().request_name !== targetRequestName) return;
+
               cellNumber++;
               const rowData = tableRow.getData();
               const updatedRow = { ...rowData };
+
               pastedRow.forEach((cellValue, colOffset) => {
                 const column = rangeColumns[colOffset];
                 if (!column) return;
                 const field = column.getField();
                 const columnDef = column.getDefinition();
                 const cell = tableRow.getCell(field);
+
                 if (columnDef.editor === false || cell.getElement().classList.contains("disable-editing")) {
-                  hasValidationErrors ||= true;
-                  showNotification("Cell: " + cellNumber + " | " + "Editing is not allowed in this cell.", "warning");
+                  hasValidationErrors = true;
+                  showNotification(`Cell: ${cellNumber} | Editing is not allowed in this cell.`, "warning");
                   return;
                 }
 
                 try {
                   updatedRow[field] = this.validateCellValue(cellValue, columnDef, rowData);
+                  changedRows.add(rowStart + rowOffset + 1);
+                  changedCols.add(colStart + colOffset);
                 } catch (error) {
-                  hasValidationErrors ||= true;
-                  showNotification("Cell: " + cellNumber + " | " + error.message, "error");
+                  hasValidationErrors = true;
+                  showNotification(`Cell: ${cellNumber} | ${error.message}`, "error");
                 }
               });
 
               batchUpdates[rowData.barcode] = updatedRow;
             });
 
-            if (hasValidationErrors) {
-              return [];
-            }
+            if (hasValidationErrors) return [];
 
             const updatedRowsArray = Object.values(batchUpdates);
             if (updatedRowsArray.length) {
               this.tabulatorInstance.updateData(updatedRowsArray);
+
+              if (changedRows.size && changedCols.size) {
+                const startRow = this.tabulatorInstance.getRowFromPosition(Math.min(...changedRows));
+                const endRow = this.tabulatorInstance.getRowFromPosition(Math.max(...changedRows));
+                const startCol = visibleColumns[Math.min(...changedCols)];
+                const endCol = visibleColumns[Math.max(...changedCols)];
+
+                if (startRow && endRow && startCol && endCol) {
+                  this.tabulatorInstance.addRange(
+                    startRow.getCell(startCol.getField()),
+                    endRow.getCell(endCol.getField())
+                  );
+                }
+              }
             }
 
             return [];

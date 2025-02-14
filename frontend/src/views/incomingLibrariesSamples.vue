@@ -1499,11 +1499,9 @@ export default {
 </style>
 
 <!--
-single cell paste, filter by request_name
 paste error window
-smart paste behaviour
-
 migrations fix
+
 make the component modular
 show hover tooltips with use of a library
 -->
