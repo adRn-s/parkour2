@@ -1,0 +1,10 @@
+{
+	"name": "Existing Docker Compose (Extend)",
+	"dockerComposeFile": [
+		"../docker-compose.yml",
+		"docker-compose.yml"
+	],
+	"service": "parkour2-django",
+	"workspaceFolder": "/usr/src/app/",
+	"initializeCommand": "make dev-easy load-fixtures create-admin"
+}

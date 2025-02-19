@@ -1,0 +1,5 @@
+services:
+  parkour2-django:
+    volumes:
+      - ../backend:/usr/src/app:cached
+    command: sleep infinity
