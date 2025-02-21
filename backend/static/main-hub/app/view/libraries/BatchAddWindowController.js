@@ -22,6 +22,12 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       "#create-empty-records-button": {
         click: "createEmptyRecords"
       },
+      "#save-button": {
+        click: "save"
+      },
+      "#download-sample-form": {
+        click: "downloadSampleForm"
+      },
 
       // Libraries only
       "#indexTypeEditor": {
@@ -39,12 +45,9 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
         select: "selectLibraryProtocol"
       },
 
-      "#save-button": {
-        click: "save"
-      },
-
-      "#download-sample-form": {
-        click: "downloadSampleForm"
+      // Both Libraries and Samples
+      "#measuringUnitEditor": {
+        select: "selectMeasuringUnit"
       }
     }
   },
@@ -59,7 +62,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     }
 
     Ext.apply(Ext.tip.QuickTipManager.getQuickTip(), {
-      dismissDelay: 10000 // hide after 10 seconds
+      dismissDelay: 10000 // Hide after 10 seconds
     });
   },
 
@@ -74,8 +77,6 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     wnd.getDockedItems('toolbar[dock="bottom"]')[0].show();
     if (wnd.mode === "add") {
       wnd.getDockedItems('toolbar[dock="top"]')[0].show();
-    } else {
-      // wnd.down('#cancel-button').show();
     }
     layout.setActiveItem(1);
 
@@ -102,14 +103,10 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       configuration[0].add(wnd.records);
     }
 
-    wnd.maximize(); // auto fullscreen
+    wnd.maximize(); // Auto fullscreen
 
     var grid = Ext.getCmp("batch-add-grid");
     grid.reconfigure(configuration[0], configuration[1]);
-
-    // Load stores
-    // Ext.getStore('libraryProtocolsStore').reload();
-    // Ext.getStore('libraryTypesStore').reload();
 
     // Flash hint text
     $("#edit-hint")
@@ -183,6 +180,20 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
               item.set({ index_reads: null, index_i7: "", index_i5: "" });
             }
             item.set("index_type", record.get("index_type"));
+          } else if (dataIndex === "measuring_unit") {
+            // Update Measuring Unit
+            item.set("measuring_unit", record.get("measuring_unit"));
+
+            // Update Measured Value based on Measuring Unit
+            if (record.get("measuring_unit") === "-") {
+              item.set("measured_value", -1);
+            } else {
+              item.set("measured_value", null);
+            }
+          } else if (dataIndex === "measured_value") {
+            // Update Measuring Unit and Measured Value
+            item.set("measuring_unit", record.get("measuring_unit"));
+            item.set("measured_value", record.get("measured_value"));
           }
 
           // If the # of Index Reads was selected, update Index Type too
@@ -276,18 +287,6 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
               library_protocol: record.get("library_protocol"),
               nucleic_acid_type: record.get("nucleic_acid_type")
             });
-          }
-
-          // RNA Quality should be applied only when Input Type is RNA
-          else if (dataIndex === "rna_quality") {
-            var nat = Ext.getStore("nucleicAcidTypesStore").findRecord(
-              "id",
-              item.get("nucleic_acid_type")
-            );
-
-            if (nat && nat.get("type") === "RNA") {
-              item.set(dataIndex, record.get(dataIndex));
-            }
           } else {
             item.set(dataIndex, record.get(dataIndex));
           }
@@ -311,7 +310,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     var libraryProtocolEditor = Ext.getCmp("libraryProtocolEditor");
     var libraryProtocolsStore = Ext.getStore("libraryProtocolsStore");
     var libraryTypeEditor = Ext.getCmp("libraryTypeEditor");
-    var rnaQualityEditor = Ext.getCmp("rnaQualityEditor");
+    var measuringUnitEditor = Ext.getCmp("measuringUnitEditor");
+    var measuredValueEditor = Ext.getCmp("measuredValueEditor");
     var record = context.record;
 
     // Toggle Library Type
@@ -350,6 +350,22 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
         indexI7Editor.disable();
         indexI5Editor.disable();
       }
+
+      // Reset Measured Value if Measuring Unit is changed
+      if (!measuringUnitEditor.getValue()) {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.disable();
+        record.set("measured_value", null);
+      } else {
+        if (measuringUnitEditor.getValue() === "-") {
+          measuredValueEditor.setValue(null);
+          measuredValueEditor.disable();
+          record.set("measured_value", -1);
+        } else {
+          measuredValueEditor.setValue(null);
+          measuredValueEditor.enable();
+        }
+      }
     }
 
     // Samples
@@ -369,15 +385,20 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
         }
       }
 
-      // Toggle RNA Quality
-      var nat = nucleicAcidTypesStore.findRecord(
-        "id",
-        record.get("nucleic_acid_type")
-      );
-      if (nat && nat.get("type") === "RNA") {
-        rnaQualityEditor.enable();
+      // Reset Measured Value if Measuring Unit is changed
+      if (!measuringUnitEditor.getValue()) {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.disable();
+        record.set("measured_value", null);
       } else {
-        rnaQualityEditor.disable();
+        if (measuringUnitEditor.getValue() === "-") {
+          measuredValueEditor.setValue(null);
+          measuredValueEditor.disable();
+          record.set("measured_value", -1);
+        } else {
+          measuredValueEditor.setValue(null);
+          measuredValueEditor.enable();
+        }
       }
     }
   },
@@ -412,22 +433,26 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       record.set({ index_i7: "", index_i5: "" });
     }
 
-    // Reset RNA Quality if Input Type has changed
-    var nat = Ext.getStore("nucleicAcidTypesStore").findRecord(
-      "id",
-      record.get("nucleic_acid_type")
-    );
-    if (
-      nat !== null &&
-      nat.get("type") === "DNA" &&
-      record.get("rna_quality") > 0
-    ) {
-      record.set("rna_quality", null);
+    // Reset Measured Value if Measuring Unit is empty
+    var measuringUnitEditor = Ext.getCmp("measuringUnitEditor");
+    var measuredValueEditor = Ext.getCmp("measuredValueEditor");
+    if (!measuringUnitEditor.getValue()) {
+      measuredValueEditor.setValue(null);
+      measuredValueEditor.disable();
+      record.set("measured_value", null);
+    } else {
+      if (measuringUnitEditor.getValue() === "-") {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.disable();
+        record.set("measured_value", -1);
+      } else {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.enable();
+      }
     }
 
     record.commit();
 
-    // Validate the record after editing and refresh the grid
     this.validateRecord(record);
     grid.getView().refresh();
   },
@@ -454,13 +479,11 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       indexReadsEditor.getStore().add({ num: i });
     }
 
-    // Remove values before loading new stores
     indexI7Editor.setValue(null);
     indexI5Editor.setValue(null);
     indexI7Editor.disable();
     indexI5Editor.disable();
 
-    // Reload stores
     indexI7Store.reload({
       params: { index_type_id: record.get("id") }
     });
@@ -492,19 +515,31 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     var libraryProtocolEditor = Ext.getCmp("libraryProtocolEditor");
     var libraryProtocolsStore = Ext.getStore("libraryProtocolsStore");
     var libraryTypeEditor = Ext.getCmp("libraryTypeEditor");
-    var rnaQualityEditor = Ext.getCmp("rnaQualityEditor");
 
     libraryTypeEditor.setValue(null);
     libraryTypeEditor.disable();
 
     this.filterLibraryProtocols(libraryProtocolsStore, record.get("type"));
     libraryProtocolEditor.enable();
+  },
 
-    if (record.get("type") === "RNA") {
-      rnaQualityEditor.enable();
+  selectMeasuringUnit: function (fld, record) {
+    // Reset Measured Value if Measuring Unit is changed
+    var measuringUnitEditor = Ext.getCmp("measuringUnitEditor");
+    var measuredValueEditor = Ext.getCmp("measuredValueEditor");
+    if (!measuringUnitEditor.getValue()) {
+      measuredValueEditor.setValue(null);
+      measuredValueEditor.disable();
+      record.set("measured_value", null);
     } else {
-      rnaQualityEditor.setValue(null);
-      rnaQualityEditor.disable();
+      if (measuringUnitEditor.getValue() === "-") {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.disable();
+        record.set("measured_value", -1);
+      } else {
+        measuredValueEditor.setValue(null);
+        measuredValueEditor.enable();
+      }
     }
   },
 
@@ -533,9 +568,49 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Size (bp)",
         dataIndex: "mean_fragment_size",
-        tooltip: "Mean Fragment Size",
-        width: 100,
+        tooltip: "Enter the Mean Fragment Size (in bp)",
         editor: {
+          xtype: "numberfield",
+          minValue: 0
+        },
+        renderer: this.errorRenderer,
+        width: 100
+      },
+      {
+        text: "Measuring Unit",
+        dataIndex: "measuring_unit",
+        tooltip:
+          "Choose the Measuring Unit <br><br> - Use 'Unknown' if no values are available",
+        width: 120,
+        editor: {
+          id: "measuringUnitEditor",
+          itemId: "measuringUnitEditor",
+          xtype: "combobox",
+          queryMode: "local",
+          valueField: "id",
+          displayField: "name",
+          store: {
+            fields: ["id", "name"],
+            data: [
+              { id: "concentration", name: "ng/µl (Concentration)" },
+              { id: "-", name: "Unknown" }
+            ]
+          },
+          forceSelection: true,
+          listConfig: {
+            minWidth: 200
+          }
+        },
+        renderer: this.comboboxErrorRenderer
+      },
+      {
+        text: "Measured Value",
+        dataIndex: "measured_value",
+        tooltip: "Enter the Measured Value",
+        width: 120,
+        editor: {
+          id: "measuredValueEditor",
+          itemId: "measuredValueEditor",
           xtype: "numberfield",
           minValue: 0
         },
@@ -544,7 +619,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index Type",
         dataIndex: "index_type",
-        tooltip: "Index Type",
+        tooltip: "Choose the Index Type",
         width: 100,
         editor: {
           xtype: "combobox",
@@ -562,7 +637,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "# of Index Reads",
         dataIndex: "index_reads",
-        tooltip: "Index Type",
+        tooltip: "Choose the Number of Index Reads",
         width: 130,
         editor: {
           xtype: "combobox",
@@ -598,8 +673,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index I7",
         dataIndex: "index_i7",
-        tooltip: "Index I7",
-        width: 140,
+        tooltip: "Choose Index I7",
+        width: 100,
         editor: {
           xtype: "combobox",
           id: "indexI7Editor",
@@ -616,7 +691,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
           store: "indexI7Store",
           regex: new RegExp("^(?=(?:.{6}|.{8}|.{10}|.{12}|.{24})$)[ATCG]+$"),
           regexText:
-            "Only A, T, C and G (uppercase) are allowed. Index length must be 6, 8, 10, 12 or 24.",
+            "Only A, T, C, and G (uppercase) are allowed. Index length must be 6, 8, 10, 12, or 24.",
           matchFieldWidth: false
         },
         renderer: this.errorRenderer
@@ -624,8 +699,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Index I5",
         dataIndex: "index_i5",
-        tooltip: "Index I5",
-        width: 140,
+        tooltip: "Choose Index I5",
+        width: 100,
         editor: {
           xtype: "combobox",
           id: "indexI5Editor",
@@ -642,44 +717,43 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
           store: "indexI5Store",
           regex: new RegExp("^(?=(?:.{6}|.{8}|.{10}|.{12}|.{24})$)[ATCG]+$"),
           regexText:
-            "Only A, T, C and G (uppercase) are allowed. Index length must be 6, 8, 10, 12 or 24.",
+            "Only A, T, C, and G (uppercase) are allowed. Index length must be 6, 8, 10, 12, or 24.",
           matchFieldWidth: false
         },
         renderer: this.errorRenderer
+      },
+      {
+        text: "Comment Library",
+        dataIndex: "comments",
+        tooltip:
+          "Description of the Library Generation and the Expected Quality <br><br> - ChIP-Seq library, includes adapter dimers <br> - ChIP-Seq library contains fragments > 1kbp <br> - Amplicon, bp is the product of interest",
+        width: 180,
+        editor: {
+          xtype: "textfield",
+          allowBlank: true
+        }
       }
-      // {
-      //   text: 'qPCR (nM)',
-      //   dataIndex: 'qpcr_result',
-      //   tooltip: 'qPCR Result (nM)',
-      //   width: 85,
-      //   editor: {
-      //     xtype: 'numberfield',
-      //     allowBlank: true,
-      //     minValue: 0
-      //   }
-      // }
     ]);
 
-    // Sort columns
+    // Sorting the columns
     var order = [
       "numberer",
       "name",
       "barcode",
       "library_protocol",
+      "comments",
       "library_type",
-      "concentration",
+      "measuring_unit",
+      "measured_value",
       "mean_fragment_size",
+      "volume",
+      "read_length",
+      "sequencing_depth",
       "index_type",
       "index_reads",
       "index_i7",
       "index_i5",
-      "read_length",
-      "sequencing_depth",
-      // 'amplification_cycles', 'equal_representation_nucleotides', 'qpcr_result',
-      "sample_volume",
-      // 'concentration_method',
-      "organism",
-      "comments"
+      "organism"
     ];
     columns = this.sortColumns(columns, order);
 
@@ -694,10 +768,51 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
 
     var columns = Ext.Array.merge(this.getCommonColumns(mode), [
       {
+        text: "Measuring Unit",
+        dataIndex: "measuring_unit",
+        tooltip:
+          "Choose the Measuring Unit <br><br> - Use 'Unknown' if no values are available",
+        width: 120,
+        editor: {
+          id: "measuringUnitEditor",
+          itemId: "measuringUnitEditor",
+          xtype: "combobox",
+          queryMode: "local",
+          valueField: "id",
+          displayField: "name",
+          store: {
+            fields: ["id", "name"],
+            data: [
+              { id: "concentration", name: "ng/µl (Concentration)" },
+              { id: "m", name: "M (Cells)" },
+              { id: "-", name: "Unknown" }
+            ]
+          },
+          forceSelection: true,
+          listConfig: {
+            minWidth: 200
+          }
+        },
+        renderer: this.comboboxErrorRenderer
+      },
+      {
+        text: "Measured Value",
+        dataIndex: "measured_value",
+        tooltip: "Enter the Measured Value",
+        width: 120,
+        editor: {
+          id: "measuredValueEditor",
+          itemId: "measuredValueEditor",
+          xtype: "numberfield",
+          minValue: 0
+        },
+        renderer: this.errorRenderer
+      },
+      {
         text: "Input Type",
         dataIndex: "nucleic_acid_type",
-        tooltip: "Input Type",
-        width: 200,
+        tooltip: "Choose the Input Type",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "nucleicAcidTypeEditor",
@@ -712,42 +827,78 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
         renderer: this.comboboxErrorRenderer
       },
       {
-        text: "RQN",
-        dataIndex: "rna_quality",
-        tooltip: "RNA Quality",
-        width: 80,
+        text: "GMO",
+        dataIndex: "gmo",
+        tooltip:
+          "Choose if you are submitting Genetically Modified Organisms, often applies to living cells",
+        width: 90,
         editor: {
           xtype: "combobox",
-          id: "rnaQualityEditor",
           queryMode: "local",
           valueField: "value",
           displayField: "name",
-          displayTpl: Ext.create("Ext.XTemplate", '<tpl for=".">{value}</tpl>'),
-          store: "rnaQualityStore",
-          regex: new RegExp("^(11|10|[1-9]?(.[0-9]+)?|.[0-9]+)$"),
-          regexText: "Only values between 1 and 10 are allowed."
+          store: {
+            fields: ["id", "name"],
+            data: [
+              { value: true, name: "Yes" },
+              { value: false, name: "No" }
+            ]
+          },
+          forceSelection: true
         },
-        renderer: this.errorRenderer
+        renderer: this.comboboxErrorRenderer
+      },
+      {
+        text: "Biosafety Level",
+        dataIndex: "biosafety_level",
+        tooltip: "Choose the Biosafety Level",
+        width: 120,
+        editor: {
+          xtype: "combobox",
+          queryMode: "local",
+          valueField: "id",
+          displayField: "name",
+          store: {
+            fields: ["id", "name"],
+            data: [
+              { id: "bsl1", name: "BSL1" },
+              { id: "bsl2", name: "BSL2" }
+            ]
+          },
+          forceSelection: true
+        },
+        renderer: this.comboboxErrorRenderer
+      },
+      {
+        text: "Comment Input",
+        dataIndex: "comments",
+        tooltip:
+          "Description of the Input Generation and the Expected Quality <br><br> - pull-down assay, target: H3K9me3 <br> - Column-purified RNA, high quality, DNase treated <br> - FFPE extracted total RNA, fragmentation expected",
+        width: 220,
+        editor: {
+          xtype: "textfield",
+          allowBlank: true
+        }
       }
     ]);
 
-    // Sort columns
+    // Sorting the columns
     var order = [
       "numberer",
       "name",
       "barcode",
       "nucleic_acid_type",
+      "comments",
+      "measuring_unit",
+      "measured_value",
+      "volume",
       "library_protocol",
       "library_type",
-      "concentration",
-      "rna_quality",
       "read_length",
       "sequencing_depth",
-      // 'amplification_cycles', 'equal_representation_nucleotides',
-      "sample_volume",
-      // 'concentration_method',
       "organism",
-      "comments"
+      "biosafety_level",
+      "gmo"
     ];
     columns = this.sortColumns(columns, order);
 
@@ -775,7 +926,7 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Name",
         dataIndex: "name",
-        tooltip: "Name",
+        tooltip: "Enter a Unique Name",
         minWidth: 200,
         flex: 1,
         editor: {
@@ -788,8 +939,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Protocol",
         dataIndex: "library_protocol",
-        tooltip: "Library Preparation Protocol",
-        width: 200,
+        tooltip: "Choose the Library Preparation Protocol",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "libraryProtocolEditor",
@@ -820,8 +971,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Analysis Type",
         dataIndex: "library_type",
-        tooltip: "Analysis Type",
-        width: 200,
+        tooltip: "Choose the Analysis Type",
+        width: 160,
         editor: {
           xtype: "combobox",
           id: "libraryTypeEditor",
@@ -830,27 +981,27 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
           displayField: "name",
           valueField: "id",
           store: "libraryTypesStore",
-          // matchFieldWidth: false,
           forceSelection: true
         },
         renderer: this.comboboxErrorRenderer
       },
       {
-        text: "ng/μl",
-        dataIndex: "concentration",
-        tooltip: "Concentration",
+        text: "Volume (µl)",
+        dataIndex: "volume",
+        tooltip: "Enter the Measured Volume",
         width: 90,
         editor: {
           xtype: "numberfield",
-          minValue: 0
+          minValue: 0,
+          step: 10
         },
         renderer: this.errorRenderer
       },
       {
-        text: "Length",
+        text: "Read Length",
         dataIndex: "read_length",
-        tooltip: "Read Length",
-        width: 70,
+        tooltip: "Choose the Read Length",
+        width: 100,
         editor: {
           xtype: "combobox",
           queryMode: "local",
@@ -865,8 +1016,9 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       {
         text: "Depth (M)",
         dataIndex: "sequencing_depth",
-        tooltip: "Sequencing Depth",
-        width: 85,
+        tooltip:
+          "Enter the Sequencing Depth (in Millions of Paired-End Fragments)",
+        width: 90,
         editor: {
           xtype: "numberfield",
           minValue: 0,
@@ -874,71 +1026,23 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
         },
         renderer: this.errorRenderer
       },
-      // {
-      //   text: 'Amplification',
-      //   tooltip: 'Amplification cycles',
-      //   dataIndex: 'amplification_cycles',
-      //   width: 105,
-      //   editor: {
-      //     xtype: 'numberfield',
-      //     minValue: 0,
-      //     allowDecimals: false,
-      //     allowBlank: true
-      //   },
-      //   renderer: this.errorRenderer
-      // },
-      // {
-      //   xtype: 'checkcolumn',
-      //   text: 'Equal nucl.',
-      //   tooltip: 'Equal Representation of Nucleotides: check = Yes, no check = No',
-      //   dataIndex: 'equal_representation_nucleotides',
-      //   width: 95,
-      //   editor: {
-      //     xtype: 'checkbox',
-      //     cls: 'x-grid-checkheader-editor'
-      //   }
-      // },
-      // {
-      //   text: 'F/S',
-      //   dataIndex: 'concentration_method',
-      //   tooltip: 'Concentration Determined by',
-      //   width: 80,
-      //   editor: {
-      //     xtype: 'combobox',
-      //     queryMode: 'local',
-      //     valueField: 'id',
-      //     displayField: 'name',
-      //     store: 'concentrationMethodsStore',
-      //     matchFieldWidth: false,
-      //     forceSelection: true
-      //   },
-      //   renderer: this.comboboxErrorRenderer
-      // },
       {
         text: "Organism",
         dataIndex: "organism",
-        tooltip: "Organism",
-        width: 200,
+        tooltip: "Choose the Organism",
+        width: 120,
         editor: {
           xtype: "combobox",
           queryMode: "local",
           valueField: "id",
           displayField: "name",
           store: "organismsStore",
-          // matchFieldWidth: false,
-          forceSelection: true
+          forceSelection: true,
+          listConfig: {
+            minWidth: 200
+          }
         },
         renderer: this.comboboxErrorRenderer
-      },
-      {
-        text: "Comments",
-        dataIndex: "comments",
-        tooltip: "Comments",
-        width: 200,
-        editor: {
-          xtype: "textfield",
-          allowBlank: true
-        }
       }
     ];
 
@@ -1054,7 +1158,6 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     Ext.Ajax.request({
       url: url,
       method: "POST",
-      // timeout: 1000000,
       scope: this,
       params: {
         data: Ext.JSON.encode(Ext.Array.pluck(store.data.items, "data"))
@@ -1105,25 +1208,16 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
     var grid = Ext.getCmp("batch-add-grid");
     var store = grid.getStore();
 
-    // Validate all records
     store.each(function (record) {
       me.validateRecord(record, url);
     });
 
-    // Refresh the grid
     grid.getView().refresh();
   },
 
   validateRecord: function (record, url) {
     var grid = Ext.getCmp("batch-add-grid");
     var store = grid.getStore();
-
-    // Passing default values to the API for the removed variables which are still required in the request object
-    record.data.amplification_cycles = 0;
-    record.data.concentration_method = 4;
-    record.data.equal_representation_nucleotides = false;
-    if (url == "api/libraries/") record.data.qpcr_result = 0;
-
     var validation = record.getValidation(true).data;
     var invalid = false;
     var errors = {};
@@ -1165,8 +1259,8 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       }
     }
 
-    if (dataIndex === "rna_quality" && value === 11) {
-      return "Determined by Facility";
+    if (dataIndex === "measured_value" && value === -1) {
+      return "";
     }
 
     return value;
@@ -1181,11 +1275,14 @@ Ext.define("MainHub.view.libraries.BatchAddWindowController", {
       meta.tdAttr = 'data-qtip="' + record.get("errors")[dataIndex] + '"';
     }
 
+    if (dataIndex === "gmo") {
+      var item = store.findRecord("value", value, 0, false, false, true);
+      return item ? item.get("name") : "";
+    }
+
     store.clearFilter();
 
-    // Exact match
     var item = store.findRecord("id", value, 0, false, false, true);
-
     return item ? item.get("name") : "";
   },
 
