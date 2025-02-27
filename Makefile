@@ -160,6 +160,10 @@ load-postgres-plain:
 			"psql -d postgres -U postgres < tmp_parkour-postgres.dump > /dev/null" || \
 		echo "ERROR: ./this.sql not found, do something in the lines of... cd /parkour/data/docker/postgres_dumps/; ln -s this.sql 2022-Aug-04.sql"
 
+get-schema:  ## Get schema of running instance (for prompting LLMs)
+	@cat misc/get_schema.sql | \
+		docker exec -i parkour2-postgres sh -c 'psql -d postgres -U postgres'
+
 pg-analyze:
 	@docker exec -it parkour2-postgres psql -d postgres -U postgres -c 'ANALYZE VERBOSE'  > pg-analyze.txt.ignore
 
